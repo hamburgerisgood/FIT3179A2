@@ -1,0 +1,121 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "description": "Choropleth: ARIA wins per million residents, by state of the winner's hometown. Population = ABS estimated resident population, 31 March 2026.",
+  "width": 420,
+  "height": 380,
+  "params": [
+    {
+      "name": "award",
+      "value": "All three awards",
+      "bind": {
+        "input": "select",
+        "options": ["All three awards", "Album of the Year", "Best Group", "Best Country Album"],
+        "name": "Award "
+      }
+    }
+  ],
+  "projection": {"type": "conicEqualArea", "parallels": [-18, -36], "rotate": [-132, 0]},
+  "layer": [
+    {
+      "data": {
+        "url": "data/au_states.topo.json",
+        "format": {"type": "topojson", "feature": "states"}
+      },
+      "mark": {"type": "geoshape", "fill": "#e9e3d9", "stroke": "#fbf8f3", "strokeWidth": 1.2}
+    },
+    {
+      "data": {"url": "data/aria_wins.csv"},
+      "transform": [
+        {"filter": "award === 'All three awards' || datum.category === award"},
+        {"aggregate": [{"op": "count", "as": "wins"}], "groupby": ["state"]},
+        {
+          "lookup": "state",
+          "from": {
+            "data": {"url": "data/source/abs_erp_2026q1.csv"},
+            "key": "state",
+            "fields": ["state_name", "population_thousands"]
+          }
+        },
+        {"filter": "isValid(datum.state_name)"},
+        {"calculate": "datum.wins / (datum.population_thousands / 1000)", "as": "per_million"},
+        {
+          "lookup": "state_name",
+          "from": {
+            "data": {
+              "url": "data/au_states.topo.json",
+              "format": {"type": "topojson", "feature": "states"}
+            },
+            "key": "properties.STATE_NAME"
+          },
+          "as": "geo"
+        },
+        {
+          "lookup": "state",
+          "from": {
+            "data": {"url": "data/state_points.csv"},
+            "key": "state",
+            "fields": ["lon", "lat"]
+          }
+        },
+        {"calculate": "toNumber(datum.lon) + (datum.state === 'ACT' ? 4.4 : 0)", "as": "label_lon"},
+        {
+          "calculate": "toNumber(datum.lat) + (datum.state === 'ACT' ? 0.3 : datum.state === 'TAS' ? 0.5 : 0)",
+          "as": "label_lat"
+        }
+      ],
+      "layer": [
+        {
+          "mark": {"type": "geoshape", "stroke": "#fbf8f3", "strokeWidth": 1.2},
+          "encoding": {
+            "shape": {"field": "geo", "type": "geojson"},
+            "color": {
+              "field": "per_million",
+              "type": "quantitative",
+              "title": "Wins per million residents",
+              "scale": {
+                "type": "linear",
+                "domain": [0, 8],
+                "range": ["#f6ecd3", "#e0b660", "#a36a12", "#5c3a08"],
+                "interpolate": "hcl"
+              },
+              "legend": {
+                "orient": "bottom",
+                "direction": "horizontal",
+                "gradientLength": 220,
+                "values": [0, 2, 4, 6, 8]
+              }
+            },
+            "tooltip": [
+              {"field": "state_name", "title": "State"},
+              {"field": "wins", "title": "ARIA wins"},
+              {
+                "field": "population_thousands",
+                "title": "Population ('000, ABS Mar 2026)",
+                "format": ",.1f"
+              },
+              {"field": "per_million", "title": "Wins per million people", "format": ".1f"}
+            ]
+          }
+        },
+        {
+          "mark": {"type": "text", "fontSize": 11, "fontWeight": 600, "lineHeight": 13},
+          "encoding": {
+            "longitude": {"field": "label_lon", "type": "quantitative"},
+            "latitude": {"field": "label_lat", "type": "quantitative"},
+            "text": {"field": "label", "type": "nominal"},
+            "color": {
+              "condition": {
+                "test": "datum.per_million > 4.5 && datum.state !== 'ACT'",
+                "value": "#fffaf0"
+              },
+              "value": "#2b2520"
+            }
+          },
+          "transform": [
+            {"calculate": "[datum.state, format(datum.per_million, '.1f')]", "as": "label"}
+          ]
+        }
+      ]
+    }
+  ]
+}

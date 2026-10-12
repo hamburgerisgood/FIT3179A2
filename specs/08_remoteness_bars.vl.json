@@ -1,0 +1,204 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "description": "Three aligned bar charts: where Australians live (ABS/AIHW, June 2023) compared with where ARIA winners come from, by ABS Remoteness Area.",
+  "spacing": 26,
+  "hconcat": [
+    {
+      "title": {"text": "Where Australians live", "subtitle": "ABS, 30 June 2023"},
+      "width": 170,
+      "height": 150,
+      "data": {
+        "url": "data/source/abs_remoteness_2023.csv",
+        "format": {"type": "csv", "parse": {"population_share_pct": "number"}}
+      },
+      "transform": [{"calculate": "datum.population_share_pct / 100", "as": "share"}],
+      "layer": [
+        {
+          "mark": {"type": "bar", "color": "#9b9083", "cornerRadiusEnd": 2},
+          "encoding": {
+            "y": {
+              "field": "remoteness",
+              "type": "nominal",
+              "sort": ["Major city", "Inner regional", "Outer regional", "Remote", "Very remote"],
+              "title": null,
+              "axis": {
+                "labelFontSize": 11,
+                "labelColor": "#1f1c18",
+                "domain": false,
+                "ticks": false
+              }
+            },
+            "x": {
+              "field": "share",
+              "type": "quantitative",
+              "scale": {"domain": [0, 1]},
+              "axis": null
+            },
+            "tooltip": [
+              {"field": "remoteness", "title": "Area"},
+              {"field": "population_share_pct", "title": "% of Australians"}
+            ]
+          }
+        },
+        {
+          "mark": {"type": "text", "align": "left", "dx": 4, "fontSize": 10.5, "color": "#3e3832"},
+          "encoding": {
+            "y": {
+              "field": "remoteness",
+              "type": "nominal",
+              "sort": ["Major city", "Inner regional", "Outer regional", "Remote", "Very remote"]
+            },
+            "x": {"field": "share", "type": "quantitative"},
+            "text": {"field": "share", "format": ".1~%"}
+          }
+        }
+      ]
+    },
+    {
+      "title": {
+        "text": "Album of the Year + Best Group",
+        "subtitle": "77 wins, all hometowns recorded"
+      },
+      "width": 170,
+      "height": 150,
+      "data": {"url": "data/aria_wins.csv"},
+      "transform": [
+        {"filter": "datum.category !== 'Best Country Album' && datum.remoteness !== 'Unknown'"},
+        {"aggregate": [{"op": "count", "as": "n"}], "groupby": ["remoteness"]},
+        {"joinaggregate": [{"op": "sum", "field": "n", "as": "total"}]},
+        {"calculate": "datum.n / datum.total", "as": "share"}
+      ],
+      "layer": [
+        {
+          "mark": {"type": "bar", "color": "#4a4e8c", "cornerRadiusEnd": 2},
+          "encoding": {
+            "y": {
+              "field": "remoteness",
+              "type": "nominal",
+              "scale": {
+                "domain": [
+                  "Major city",
+                  "Inner regional",
+                  "Outer regional",
+                  "Remote",
+                  "Very remote"
+                ]
+              },
+              "axis": null
+            },
+            "x": {
+              "field": "share",
+              "type": "quantitative",
+              "scale": {"domain": [0, 1]},
+              "axis": null
+            },
+            "tooltip": [
+              {"field": "remoteness", "title": "Area"},
+              {"field": "n", "title": "Wins"},
+              {"field": "share", "title": "Share", "format": ".0%"}
+            ]
+          }
+        },
+        {
+          "mark": {"type": "text", "align": "left", "dx": 4, "fontSize": 10.5, "color": "#3e3832"},
+          "encoding": {
+            "y": {
+              "field": "remoteness",
+              "type": "nominal",
+              "scale": {
+                "domain": [
+                  "Major city",
+                  "Inner regional",
+                  "Outer regional",
+                  "Remote",
+                  "Very remote"
+                ]
+              }
+            },
+            "x": {"field": "share", "type": "quantitative"},
+            "text": {"field": "label"}
+          },
+          "transform": [
+            {"calculate": "format(datum.share, '.0%') + ' (' + datum.n + ')'", "as": "label"}
+          ]
+        }
+      ]
+    },
+    {
+      "title": {"text": "Best Country Album", "subtitle": "35 of 39 wins with a recorded hometown"},
+      "width": 170,
+      "height": 150,
+      "data": {"url": "data/aria_wins.csv"},
+      "transform": [
+        {"filter": "datum.category === 'Best Country Album' && datum.remoteness !== 'Unknown'"},
+        {"aggregate": [{"op": "count", "as": "n"}], "groupby": ["remoteness"]},
+        {"joinaggregate": [{"op": "sum", "field": "n", "as": "total"}]},
+        {"calculate": "datum.n / datum.total", "as": "share"}
+      ],
+      "layer": [
+        {
+          "mark": {"type": "bar", "color": "#6f8f3d", "cornerRadiusEnd": 2},
+          "encoding": {
+            "y": {
+              "field": "remoteness",
+              "type": "nominal",
+              "scale": {
+                "domain": [
+                  "Major city",
+                  "Inner regional",
+                  "Outer regional",
+                  "Remote",
+                  "Very remote"
+                ]
+              },
+              "axis": null
+            },
+            "x": {
+              "field": "share",
+              "type": "quantitative",
+              "scale": {"domain": [0, 1]},
+              "axis": null
+            },
+            "tooltip": [
+              {"field": "remoteness", "title": "Area"},
+              {"field": "n", "title": "Wins"},
+              {"field": "share", "title": "Share", "format": ".0%"}
+            ]
+          }
+        },
+        {
+          "mark": {"type": "text", "align": "left", "dx": 4, "fontSize": 10.5, "color": "#3e3832"},
+          "encoding": {
+            "y": {
+              "field": "remoteness",
+              "type": "nominal",
+              "scale": {
+                "domain": [
+                  "Major city",
+                  "Inner regional",
+                  "Outer regional",
+                  "Remote",
+                  "Very remote"
+                ]
+              }
+            },
+            "x": {"field": "share", "type": "quantitative"},
+            "text": {"field": "label"}
+          },
+          "transform": [
+            {"calculate": "format(datum.share, '.0%') + ' (' + datum.n + ')'", "as": "label"}
+          ]
+        }
+      ]
+    }
+  ],
+  "config": {
+    "title": {
+      "fontSize": 12.5,
+      "subtitleFontSize": 10.5,
+      "subtitleColor": "#7a7064",
+      "anchor": "start",
+      "offset": 8
+    }
+  }
+}

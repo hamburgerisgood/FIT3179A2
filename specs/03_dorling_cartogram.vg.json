@@ -1,0 +1,234 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v5.json",
+  "description": "Dorling cartogram: each state is a circle whose area is its number of ARIA wins, placed near its real position. Colour compares the state's share of wins with its share of Australia's population (ABS, March 2026).",
+  "width": 420,
+  "height": 440,
+  "padding": 4,
+  "data": [
+    {
+      "name": "outline",
+      "url": "data/au_states.topo.json",
+      "format": {"type": "topojson", "feature": "states"}
+    },
+    {
+      "name": "wins",
+      "url": "data/aria_wins.csv",
+      "format": {"type": "csv"},
+      "transform": [{"type": "aggregate", "groupby": ["state"], "ops": ["count"], "as": ["wins"]}]
+    },
+    {
+      "name": "population",
+      "url": "data/source/abs_erp_2026q1.csv",
+      "format": {"type": "csv", "parse": {"population_thousands": "number"}}
+    },
+    {
+      "name": "nodes",
+      "url": "data/state_points.csv",
+      "format": {"type": "csv", "parse": {"lon": "number", "lat": "number"}},
+      "transform": [
+        {
+          "type": "lookup",
+          "from": "wins",
+          "key": "state",
+          "fields": ["state"],
+          "values": ["wins"],
+          "default": 0
+        },
+        {
+          "type": "lookup",
+          "from": "population",
+          "key": "state",
+          "fields": ["state"],
+          "values": ["population_thousands"],
+          "as": ["pop"]
+        },
+        {
+          "type": "joinaggregate",
+          "ops": ["sum", "sum"],
+          "fields": ["wins", "pop"],
+          "as": ["total_wins", "total_pop"]
+        },
+        {"type": "formula", "as": "win_share", "expr": "datum.wins / datum.total_wins"},
+        {"type": "formula", "as": "pop_share", "expr": "datum.pop / datum.total_pop"},
+        {"type": "formula", "as": "index", "expr": "datum.win_share / datum.pop_share"},
+        {"type": "formula", "as": "r", "expr": "8.5 * sqrt(datum.wins)"},
+        {
+          "type": "geopoint",
+          "projection": "australia",
+          "fields": ["lon", "lat"],
+          "as": ["cx", "cy"]
+        }
+      ]
+    },
+    {
+      "name": "size_legend",
+      "values": [{"w": 1}, {"w": 10}, {"w": 30}],
+      "transform": [{"type": "formula", "as": "r", "expr": "8.5 * sqrt(datum.w)"}]
+    }
+  ],
+  "projections": [
+    {
+      "name": "australia",
+      "type": "conicEqualArea",
+      "parallels": [-18, -36],
+      "rotate": [-132, 0],
+      "size": {"signal": "[width, height - 85]"},
+      "fit": {"signal": "data('outline')"}
+    }
+  ],
+  "scales": [
+    {
+      "name": "colour",
+      "type": "linear",
+      "domain": [0.4, 1, 1.8],
+      "range": ["#2f6c8f", "#e6dfd2", "#a36a12"],
+      "interpolate": "hcl",
+      "clamp": true
+    }
+  ],
+  "legends": [
+    {
+      "fill": "colour",
+      "type": "gradient",
+      "orient": "bottom-right",
+      "direction": "horizontal",
+      "gradientLength": 170,
+      "title": "Share of wins ÷ share of people",
+      "values": [0.4, 1, 1.8],
+      "encode": {
+        "labels": {
+          "update": {
+            "text": {
+              "signal": "datum.value === 1 ? '1 = fair share' : datum.value < 1 ? 'fewer' : 'more'"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "marks": [
+    {
+      "type": "shape",
+      "from": {"data": "outline"},
+      "encode": {
+        "enter": {
+          "fill": {"value": "#f1ece3"},
+          "stroke": {"value": "#fbf8f3"},
+          "strokeWidth": {"value": 1}
+        }
+      },
+      "transform": [{"type": "geoshape", "projection": "australia"}]
+    },
+    {
+      "name": "bubbles",
+      "type": "symbol",
+      "from": {"data": "nodes"},
+      "encode": {
+        "enter": {
+          "shape": {"value": "circle"},
+          "stroke": {"value": "#fbf8f3"},
+          "strokeWidth": {"value": 1.5},
+          "size": {"signal": "PI * datum.r * datum.r"},
+          "fill": {"scale": "colour", "field": "index"},
+          "tooltip": {
+            "signal": "{'title': datum.state_name, 'ARIA wins': datum.wins, 'Share of wins': format(datum.win_share, '.0%'), 'Share of population': format(datum.pop_share, '.0%'), 'Ratio': format(datum.index, '.2f')}"
+          }
+        }
+      },
+      "transform": [
+        {
+          "type": "force",
+          "static": true,
+          "iterations": 400,
+          "forces": [
+            {"force": "collide", "radius": {"expr": "datum.datum.r + 2"}, "iterations": 3},
+            {"force": "x", "x": "datum.cx", "strength": 0.25},
+            {"force": "y", "y": "datum.cy", "strength": 0.25}
+          ]
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "from": {"data": "bubbles"},
+      "encode": {
+        "enter": {
+          "align": {"value": "center"},
+          "baseline": {"value": "middle"},
+          "fontWeight": {"value": 600},
+          "fontSize": {"signal": "datum.datum.wins >= 10 ? 12 : 9"},
+          "fill": {
+            "signal": "datum.datum.index > 1.35 || datum.datum.index < 0.55 ? '#fffaf0' : '#2b2520'"
+          },
+          "text": {
+            "signal": "datum.datum.wins >= 10 ? [datum.datum.state, datum.datum.wins + ' wins'] : datum.datum.wins >= 5 ? datum.datum.state : ''"
+          },
+          "lineHeight": {"value": 13}
+        },
+        "update": {"x": {"field": "x"}, "y": {"field": "y"}}
+      }
+    },
+    {
+      "type": "text",
+      "from": {"data": "bubbles"},
+      "encode": {
+        "enter": {
+          "align": {"value": "left"},
+          "baseline": {"value": "middle"},
+          "fontSize": {"value": 10},
+          "fill": {"value": "#5f574d"},
+          "text": {
+            "signal": "datum.datum.wins < 5 ? datum.datum.state + ' ' + datum.datum.wins : datum.datum.wins < 10 ? datum.datum.wins : ''"
+          }
+        },
+        "update": {"x": {"signal": "datum.x + datum.datum.r + 3"}, "y": {"field": "y"}}
+      }
+    },
+    {
+      "type": "group",
+      "encode": {"enter": {"x": {"value": 0}, "y": {"signal": "height - 62"}}},
+      "marks": [
+        {
+          "type": "text",
+          "encode": {
+            "enter": {
+              "x": {"value": 0},
+              "y": {"value": -58},
+              "text": {"value": "Circle area = number of wins"},
+              "fontSize": {"value": 11},
+              "fontWeight": {"value": 600},
+              "fill": {"value": "#3e3832"}
+            }
+          }
+        },
+        {
+          "type": "symbol",
+          "from": {"data": "size_legend"},
+          "encode": {
+            "enter": {
+              "x": {"signal": "datum.w === 1 ? 12 : datum.w === 10 ? 48 : 112"},
+              "y": {"signal": "56 - datum.r"},
+              "size": {"signal": "PI * datum.r * datum.r"},
+              "fill": {"value": "transparent"},
+              "stroke": {"value": "#9b9083"}
+            }
+          }
+        },
+        {
+          "type": "text",
+          "from": {"data": "size_legend"},
+          "encode": {
+            "enter": {
+              "x": {"signal": "datum.w === 1 ? 12 : datum.w === 10 ? 48 : 112"},
+              "y": {"signal": "53 - 2 * datum.r"},
+              "align": {"value": "center"},
+              "fontSize": {"value": 9.5},
+              "fill": {"value": "#5f574d"},
+              "text": {"signal": "datum.w"}
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

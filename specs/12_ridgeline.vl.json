@@ -1,0 +1,113 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "description": "Ridgeline plot: a smoothed timeline of each state's wins. The taller the ridge around a year, the more wins that state collected around then. Area under each ridge = that state's total wins.",
+  "data": {"url": "data/aria_wins.csv", "format": {"type": "csv", "parse": {"year": "number"}}},
+  "transform": [
+    {"filter": "datum.state !== 'Unknown'"},
+    {"joinaggregate": [{"op": "count", "as": "total"}], "groupby": ["state"]},
+    {
+      "density": "year",
+      "groupby": ["state", "total"],
+      "extent": [1987, 2025],
+      "bandwidth": 2.2,
+      "counts": true,
+      "steps": 180
+    },
+    {"calculate": "datum.state + '  (' + datum.total + ')'", "as": "row_label"}
+  ],
+  "facet": {
+    "row": {
+      "field": "row_label",
+      "type": "nominal",
+      "sort": {"field": "total", "op": "max", "order": "descending"},
+      "title": null,
+      "header": null
+    }
+  },
+  "spacing": -26,
+  "bounds": "flush",
+  "spec": {
+    "width": 640,
+    "height": 38,
+    "view": {"stroke": null, "fill": null},
+    "layer": [
+      {
+        "mark": {
+          "type": "area",
+          "interpolate": "monotone",
+          "fillOpacity": 0.88,
+          "stroke": "#fbf8f3",
+          "strokeWidth": 1.2
+        },
+        "encoding": {
+          "x": {
+            "field": "value",
+            "type": "quantitative",
+            "title": null,
+            "scale": {"domain": [1979.5, 2026], "nice": false},
+            "axis": {
+              "format": "d",
+              "values": [1987, 1995, 2000, 2005, 2010, 2015, 2020, 2025],
+              "grid": false,
+              "domain": false,
+              "ticks": false
+            }
+          },
+          "y": {
+            "field": "density",
+            "type": "quantitative",
+            "stack": null,
+            "scale": {"range": [38, -30]},
+            "axis": null
+          },
+          "color": {
+            "field": "state",
+            "type": "nominal",
+            "legend": null,
+            "scale": {
+              "domain": ["NSW", "VIC", "QLD", "WA", "SA", "TAS", "ACT", "NT"],
+              "range": [
+                "#0072B2",
+                "#CC79A7",
+                "#D55E00",
+                "#E69F00",
+                "#009E73",
+                "#56B4E9",
+                "#8c7b6b",
+                "#7a3b14"
+              ]
+            }
+          },
+          "tooltip": [
+            {"field": "state", "title": "State"},
+            {"field": "total", "title": "Total wins"}
+          ]
+        }
+      },
+      {
+        "transform": [
+          {
+            "aggregate": [{"op": "max", "field": "row_label", "as": "row_label"}],
+            "groupby": ["state"]
+          }
+        ],
+        "mark": {
+          "type": "text",
+          "align": "left",
+          "baseline": "bottom",
+          "dx": 0,
+          "dy": -3,
+          "fontSize": 11.5,
+          "fontWeight": 700,
+          "color": "#1f1c18"
+        },
+        "encoding": {
+          "x": {"datum": 1979.5, "type": "quantitative"},
+          "y": {"datum": 0, "type": "quantitative"},
+          "text": {"field": "row_label"}
+        }
+      }
+    ]
+  },
+  "padding": {"top": 34, "left": 4, "right": 4, "bottom": 4}
+}

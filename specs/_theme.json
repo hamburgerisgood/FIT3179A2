@@ -1,0 +1,46 @@
+{
+  "background": null,
+  "font": "Bricolage Grotesque, Helvetica, Arial, sans-serif",
+  "padding": 4,
+  "view": {"stroke": null},
+  "title": {"fontSize": 13, "fontWeight": 600, "color": "#1f1c18", "anchor": "start"},
+  "axis": {
+    "labelFontSize": 11,
+    "labelColor": "#5f574d",
+    "titleFontSize": 11,
+    "titleFontWeight": 500,
+    "titleColor": "#5f574d",
+    "domainColor": "#cfc5b6",
+    "tickColor": "#cfc5b6",
+    "gridColor": "#ece5da",
+    "labelPadding": 4
+  },
+  "legend": {
+    "labelFontSize": 11,
+    "labelColor": "#3e3832",
+    "titleFontSize": 11,
+    "titleFontWeight": 600,
+    "titleColor": "#3e3832",
+    "symbolStrokeWidth": 0,
+    "rowPadding": 3
+  },
+  "header": {
+    "labelFontSize": 12,
+    "labelFontWeight": 600,
+    "labelColor": "#1f1c18",
+    "titleFontSize": 0
+  },
+  "text": {"font": "Bricolage Grotesque, Helvetica, Arial, sans-serif", "color": "#3e3832"},
+  "range": {
+    "category": [
+      "#0072B2",
+      "#CC79A7",
+      "#D55E00",
+      "#E69F00",
+      "#009E73",
+      "#56B4E9",
+      "#8c7b6b",
+      "#7a3b14"
+    ]
+  }
+}

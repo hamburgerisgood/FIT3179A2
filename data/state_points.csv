@@ -1,0 +1,9 @@
+state,state_name,lon,lat,tile_row,tile_col
+NSW,New South Wales,147.015,-32.175,1,2
+VIC,Victoria,143.371,-36.977,2,1
+QLD,Queensland,144.412,-22.777,0,2
+SA,South Australia,135.921,-29.885,1,1
+WA,Western Australia,122.28,-25.764,1,0
+TAS,Tasmania,146.586,-42.069,3,1
+NT,Northern Territory,133.371,-19.479,0,1
+ACT,Australian Capital Territory,148.979,-35.467,2,2

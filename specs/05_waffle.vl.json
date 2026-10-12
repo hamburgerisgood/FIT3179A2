@@ -1,0 +1,60 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "description": "Paired waffle charts: 100 squares = all Australians (ABS, March 2026) vs 100 squares = all 116 ARIA wins in this story, coloured by state.",
+  "data": {"url": "data/waffle.csv", "format": {"type": "csv", "parse": {"square": "number"}}},
+  "transform": [
+    {"calculate": "datum.square % 10", "as": "col"},
+    {"calculate": "floor(datum.square / 10)", "as": "row"}
+  ],
+  "facet": {
+    "column": {
+      "field": "measure",
+      "type": "nominal",
+      "sort": ["Share of Australians", "Share of ARIA wins"],
+      "title": null,
+      "header": {
+        "labelFontSize": 13,
+        "labelFontWeight": 700,
+        "labelAnchor": "start",
+        "labelPadding": 8
+      }
+    }
+  },
+  "spacing": 40,
+  "spec": {
+    "width": 230,
+    "height": 230,
+    "mark": {"type": "square", "size": 300, "opacity": 1},
+    "encoding": {
+      "x": {"field": "col", "type": "ordinal", "axis": null},
+      "y": {"field": "row", "type": "ordinal", "axis": null, "sort": "descending"},
+      "color": {
+        "field": "state",
+        "type": "nominal",
+        "title": "Each square = 1%",
+        "scale": {
+          "domain": ["NSW", "VIC", "QLD", "WA", "SA", "TAS", "ACT", "NT"],
+          "range": [
+            "#0072B2",
+            "#CC79A7",
+            "#D55E00",
+            "#E69F00",
+            "#009E73",
+            "#56B4E9",
+            "#8c7b6b",
+            "#7a3b14"
+          ]
+        },
+        "legend": {"orient": "right", "symbolType": "square", "symbolSize": 140}
+      },
+      "opacity": {"condition": {"param": "pick", "value": 1}, "value": 0.18},
+      "tooltip": [{"field": "measure", "title": "Measure"}, {"field": "state", "title": "State"}]
+    },
+    "params": [
+      {
+        "name": "pick",
+        "select": {"type": "point", "fields": ["state"], "on": "mouseover", "clear": "mouseout"}
+      }
+    ]
+  }
+}

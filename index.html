@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Big Smoke, Back Paddock</title>
+<meta name="description" content="Where Australia's ARIA Award winners come from: a data story on 116 wins across Album of the Year, Best Group and Best Country Album, 1987–2025.">
+<meta name="author" content="Lee Wei Han">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/vega@5.33.0/build/vega.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5.23.0/build/vega-lite.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6.29.0/build/vega-embed.min.js"></script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="kicker">ARIA Music Awards · 1987 to 2025</p>
+    <h1>Big Smoke, <em>Back Paddock</em></h1>
+    <p class="dek">Australia's biggest music awards like to say they celebrate the whole country. We mapped the hometown of every winner of three headline awards to see how far the trophies really travel.</p>
+    <p class="byline">By Lee Wei Han · FIT3179 Data Visualisation 2, Monash University · Published 12 October 2026</p>
+    <div class="stats" aria-label="The story in numbers">
+      <div class="stat"><b>116</b><span>wins mapped</span></div>
+      <div class="stat"><b>65</b><span>different artists</span></div>
+      <div class="stat"><b>3</b><span>headline awards</span></div>
+      <div class="stat"><b>39</b><span>ceremonies</span></div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="about" aria-labelledby="about-title">
+    <h2 id="about-title">About this story</h2>
+    <div>
+      <h3>Why</h3>
+      <p>Awards shape which artists get radio play, festival slots and funding. If winners mostly come from a few cities, young musicians elsewhere see fewer people like them on stage.</p>
+    </div>
+    <div>
+      <h3>What</h3>
+      <p>Winners of Album of the Year, Best Group and Best Country Album since 1987, the hometown of each winner, and how many people live in each state and in cities versus the regions.</p>
+    </div>
+    <div>
+      <h3>How</h3>
+      <p>Twelve charts, including four maps, move from where winners come from, to whether states get a fair share, to the city–country divide, to the artists who keep winning.</p>
+    </div>
+    <div>
+      <h3>Who</h3>
+      <p>Written for any Australian who watches the ARIAs, follows local music, or grew up somewhere a long drive from the nearest capital city. No music or statistics background needed.</p>
+    </div>
+    <div class="glossary">
+      <p><b>Hometown</b> is the place Wikipedia lists as the artist's or band's origin. When no origin is given, we use the birthplace if it is in Australia. Where a duo or collaboration won, the hometown of the first-named artist is used.</p>
+      <p><b>Major city, inner regional, outer regional, remote, very remote</b> are the Australian Bureau of Statistics (ABS) Remoteness Areas. They group places by how far people must travel to reach services. Sydney is a major city; Kerang in Victoria is outer regional; Milingimbi in Arnhem Land is very remote.</p>
+    </div>
+  </section>
+
+  <!-- ===================== PART 1 ===================== -->
+  <section class="chapter" aria-labelledby="p1">
+    <div class="chapter-head">
+      <p class="num">Part 1 · The map</p>
+      <h2 id="p1">Five capital cities produced 84 of the 116 wins</h2>
+    </div>
+
+    <div class="row">
+      <div class="story">
+        <p>Start with the dots. Each circle is a hometown, sized by the number of ARIA wins its artists have taken home across our three awards.</p>
+        <p class="pull">Sydney alone holds 36 wins, more than Victoria and Western Australia combined.</p>
+        <p>Melbourne follows with 16, then Brisbane and Adelaide with 12 each and Perth with 8. Away from the coast the map goes quiet. The few inland dots are almost all country music winners, such as John Williamson from Kerang and Lee Kernaghan from Corryong.</p>
+        <p>Use the buttons under the map to see each award on its own. Album of the Year and Best Group barely leave the capitals.</p>
+      </div>
+      <figure class="fig">
+        <div class="fig-head">
+          <span class="idiom">Proportional symbol map</span>
+          <h3>Hometowns of ARIA winners</h3>
+          <p>Circle area shows wins. Colour shows the ABS remoteness class of the hometown. Hover a circle for details.</p>
+        </div>
+        <div id="c01" class="chart" role="img" aria-label="Map of Australia with circles at the hometowns of ARIA winners; Sydney has by far the largest circle."></div>
+        <figcaption>Four wins have no recorded Australian hometown and are not shown. Conic equal-area projection, so areas are true to scale. <b>Sources:</b> Wikipedia ARIA award and artist pages; ABS Remoteness Areas 2021. <a href="specs/01_symbol_map.vl.json">Chart JSON</a></figcaption>
+      </figure>
+    </div>
+
+    <div class="row pair">
+      <figure class="fig">
+        <div class="fig-head">
+          <span class="idiom">Choropleth map</span>
+          <h3>Wins per million residents</h3>
+          <p>Darker states win more often for their size. Pick an award from the menu; grey states have no winners for that award.</p>
+        </div>
+        <div id="c02" class="chart" role="img" aria-label="Choropleth of Australian states shaded by ARIA wins per million residents."></div>
+        <figcaption>Wins divided by the state's population in millions. NT's 7.4 comes from just two winners, Ian Moss and Baker Boy. <b>Population:</b> ABS estimated resident population, 31 March 2026. <a href="specs/02_choropleth.vl.json">Chart JSON</a></figcaption>
+      </figure>
+      <figure class="fig">
+        <div class="fig-head">
+          <span class="idiom">Dorling cartogram</span>
+          <h3>States resized by their wins</h3>
+          <p>Each state becomes a circle as big as its tally of wins, kept near its real place. Gold means more than its share; blue means fewer.</p>
+        </div>
+        <div id="c03" class="chart" role="img" aria-label="Cartogram of states as circles sized by wins; NSW is largest and gold, Tasmania smallest and blue."></div>
+        <figcaption>Colour compares a state's share of wins with its share of Australians. A value of 1 is exactly its fair share. <a href="specs/03_dorling_cartogram.vg.json">Chart JSON</a></figcaption>
+      </figure>
+    </div>
+
+    <div class="row">
+      <div class="story">
+        <p>Raw totals favour big states, so the two maps above adjust for population. New South Wales stays strong: 46 wins from 31% of Australians. South Australia looks even stronger, but 11 of its 13 wins belong to one artist, Kasey Chambers.</p>
+        <p>Queensland and Western Australia fall below their fair share, and Tasmania has a single win, Casey Barnes's Best Country Album in 2022.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PART 2 ===================== -->
+  <section class="chapter" aria-labelledby="p2">
+    <div class="chapter-head">
+      <p class="num">Part 2 · Fair shares</p>
+      <h2 id="p2">New South Wales has 31% of Australians and 40% of the wins</h2>
+    </div>
+
+    <div class="row">
+      <div class="story">
+        <p>Picture all Australians as 100 squares, and all 116 wins as another 100. If the awards were spread evenly, the two grids would match.</p>
+        <p>They don't. The blue NSW block grows from 31 squares to 40. Queensland shrinks from 20 to 15 and Victoria from 26 to 21. South Australia rises from 7 to 11.</p>
+        <p>Hover any square to light up that state in both grids.</p>
+      </div>
+      <figure class="fig">
+        <div class="fig-head">
+          <span class="idiom">Waffle charts</span>
+          <h3>People versus wins, 100 squares each</h3>
+          <p>Each square is 1%. Squares are rounded so each grid adds to exactly 100.</p>
+        </div>
+        <div id="c05" class="chart" role="img" aria-label="Two 10 by 10 grids comparing each state's share of population and share of ARIA wins."></div>
+        <figcaption><b>Sources:</b> ABS National, state and territory population, March 2026; ARIA winners from Wikipedia. <a href="specs/05_waffle.vl.json">Chart JSON</a></figcaption>
+      </figure>
+    </div>
+
+    <div class="row">
+      <div class="story">
+        <p>Laying the states out roughly where they sit on the map shows when each one had its turn.</p>
+        <p class="pull">Queensland won 14 times between 1990 and 2009, and has not won once in the 2020s.</p>
+        <p>The 2020s brought firsts instead: Canberra's Genesis Owusu won Album of the Year twice, Tasmania's Casey Barnes took Best Country Album, and Baker Boy brought the top prize back to the Northern Territory for the first time since 1990.</p>
+      </div>
+      <figure class="fig">
+        <div class="fig-head">
+          <span class="idiom">Tile-grid map with small multiples</span>
+          <h3>Each state's wins, decade by decade</h3>
+          <p>Tiles follow the shape of the map. Bars are split by award; the 1980s cover only 1987 to 1989.</p>
+        </div>
+        <div id="c04" class="chart" role="img" aria-label="Grid of small bar charts arranged like a map of Australia, one per state, showing wins per decade."></div>
+        <figcaption>Number beside each state is its total. <a href="specs/04_tile_grid_map.vl.json">Chart JSON</a></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ===================== PART 3 ===================== -->
+  <section class="chapter" aria-labelledby="p3">
+    <div class="chapter-head">
+      <p class="num">Part 3 · City lights, country roads</p>
+      <h2 id="p3">Outside the cities, country music is almost the only way onto the stage</h2>
+    </div>
+
+    <div class="row">
+      <div class="story">
+        <p>About 73% of Australians live in a major city. Among Album of the Year and Best Group winners the figure is 95%: 73 of 77 wins.</p>
+        <p class="pull">Best Country Album tells a different story: 15 of its 35 wins with a recorded hometown went to artists from regional towns.</p>
+        <p>That is 43%, well above the 27% of Australians who live outside the major cities.</p>
+      </div>
+      <figure class="fig">
+        <div class="fig-head">
+          <span class="idiom">Aligned bar charts</span>
+          <h3>Where people live, and where winners grew up</h3>
+          <p>Same five ABS Remoteness Areas in every panel. Counts of wins are in brackets.</p>
+        </div>
+        <div id="c08" class="chart" role="img" aria-label="Three bar charts comparing population by remoteness with the hometowns of winners."></div>
+        <figcaption><b>Sources:</b> ABS Regional population by age and sex, 30 June 2023, as reported by the Australian Institute of Health and Welfare; ARIA winners and hometowns from Wikipedia. <a href="specs/08_remoteness_bars.vl.json">Chart JSON</a></figcaption>
+      </figure>
+    </div>
+
+    <div class="row">
+      <div class="story">
+        <p>Now every win becomes a dot, placed by year and by how remote the winner's hometown is.</p>
+        <p>The top row overflows. The rows beneath are sprinkled with green, the colour of country music. More than half of those green dots come from before 2000, and only one appears after 2012.</p>
+        <p class="pull">Since 2017 the only winner with a recorded hometown outside a major city is Baker Boy.</p>
+        <p>Three recent country wins, by Fanny Lumsden and Casey Barnes, have only a state recorded, so the gap may be smaller than it looks.</p>
+      </div>
+      <figure class="fig">
+        <div class="fig-head">
+          <span class="idiom">Beeswarm plot</span>
+          <h3>All 116 wins by year and remoteness</h3>
+          <p>One dot per win, coloured by award. Hover a dot to see who won.</p>
+        </div>
+        <div id="c07" class="chart" role="img" aria-label="Beeswarm of all wins by year; most dots sit in the major city row."></div>
+        <figcaption>Dots are nudged apart so none overlap; their left–right position stays close to the year. <a href="specs/07_beeswarm.vg.json">Chart JSON</a></figcaption>
+      </figure>
+    </div>
+
+    <div class="row">
+      <div class="story">
+        <p>Each state's column is as wide as its share of all wins, and split by which award those wins came from.</p>
+        <p>New South Wales wins across all three awards. South Australia's column is almost entirely green, while Western Australia has never won Best Country Album at all.</p>
+      </div>
+      <figure class="fig">
+        <div class="fig-head">
+          <span class="idiom">Marimekko (mosaic) chart</span>
+          <h3>What each state wins</h3>
+          <p>Width = share of all wins. Height = share of that state's wins from each award.</p>
+        </div>
+        <div id="c06" class="chart" role="img" aria-label="Mosaic chart of states by width of wins and award mix."></div>
+        <figcaption>ACT, NT and TAS are the three thin slivers on the right. Hover any block for numbers. <a href="specs/06_mosaic.vl.json">Chart JSON</a></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ===================== PART 4 ===================== -->
+  <section class="chapter" aria-labelledby="p4">
+    <div class="chapter-head">
+      <p class="num">Part 4 · Dynasties</p>
+      <h2 id="p4">Four artists hold almost a quarter of the trophies</h2>
+    </div>
+
+    <div class="row">
+      <div class="story">
+        <p>Here is every winner on one strip, coloured by home state. Long runs of one colour are artists who keep coming back.</p>
+        <p>Album of the Year and Best Group often go to the same act: it has happened 17 times, from Midnight Oil in 1991 to Amyl and the Sniffers in 2025.</p>
+        <p>Click a state in the legend to pick out its winners.</p>
+      </div>
+      <figure class="fig">
+        <div class="fig-head">
+          <span class="idiom">Matrix chart</span>
+          <h3>Every winner, 1987 to 2025</h3>
+          <p>Letters mark the four biggest winners: KC Kasey Chambers, TC Troy Cassar-Daley, TI Tame Impala, P Powderfinger.</p>
+        </div>
+        <div id="c10" class="chart" role="img" aria-label="Grid of every award by year coloured by the winner's home state."></div>
+        <figcaption>The empty cell in 1988 is the one year Wikipedia lists no Best Group winner. <a href="specs/10_winner_matrix.vl.json">Chart JSON</a></figcaption>
+      </figure>
+    </div>
+
+    <div class="row">
+      <div class="story">
+        <p>Kasey Chambers (11 wins), Troy Cassar-Daley and Tame Impala (6 each) and Powderfinger (5) hold 28 of the 116 wins. Forty artists won only once.</p>
+        <p class="pull">Kasey Chambers took the lead by 2010 and nobody has caught her since.</p>
+        <p>Hover a line to follow one artist's climb.</p>
+      </div>
+      <figure class="fig">
+        <div class="fig-head">
+          <span class="idiom">Bump chart</span>
+          <h3>The race for the most wins</h3>
+          <p>Ranking of the ten artists with three or more wins, every five years. The number in each dot is wins so far.</p>
+        </div>
+        <div id="c09" class="chart" role="img" aria-label="Bump chart of artist rankings over time; Kasey Chambers ranks first from 2010."></div>
+        <figcaption>Ties are broken by career total, then alphabetically. <a href="specs/09_bump_chart.vl.json">Chart JSON</a></figcaption>
+      </figure>
+    </div>
+
+    <div class="row">
+      <div class="story">
+        <p>Grouping winners by state shows two kinds of success. New South Wales has a deep bench of 27 different winning artists. South Australia has three, and one of them, Kasey Chambers, fills most of the box.</p>
+      </div>
+      <figure class="fig">
+        <div class="fig-head">
+          <span class="idiom">Treemap</span>
+          <h3>Winning artists, grouped by home state</h3>
+          <p>Each rectangle is an artist, sized by wins. Hover to read names that do not fit.</p>
+        </div>
+        <div id="c11" class="chart" role="img" aria-label="Treemap of artists grouped by state and sized by wins."></div>
+        <figcaption>Artists without a recorded Australian hometown are left out. <a href="specs/11_treemap.vg.json">Chart JSON</a></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ===================== PART 5 ===================== -->
+  <section class="chapter" aria-labelledby="p5">
+    <div class="chapter-head">
+      <p class="num">Part 5 · Who's next</p>
+      <h2 id="p5">The spotlight moves, but it keeps returning to Sydney</h2>
+    </div>
+
+    <div class="row">
+      <div class="story">
+        <p>A smoothed timeline for each state shows its winning streaks as ridges. The bigger the ridge, the more wins around those years.</p>
+        <p>Queensland's ridge peaks around 2000, the Powderfinger years. Western Australia rises in the 2010s with Tame Impala. New South Wales never fades for long.</p>
+        <p>The newest ridges belong to the smallest places: Canberra, Tasmania and the Northern Territory all appear in the 2020s.</p>
+      </div>
+      <figure class="fig">
+        <div class="fig-head">
+          <span class="idiom">Ridgeline plot</span>
+          <h3>When each state had its moment</h3>
+          <p>Each ridge is a smoothed count of wins over time. Total wins in brackets.</p>
+        </div>
+        <div id="c12" class="chart" role="img" aria-label="Ridgeline plot of wins over time for each state."></div>
+        <figcaption>Smoothing spreads each win over a few years either side, so peaks show periods, not single years. <a href="specs/12_ridgeline.vl.json">Chart JSON</a></figcaption>
+      </figure>
+    </div>
+
+    <div class="takeaways">
+      <div>
+        <h3>Recognition follows the capitals</h3>
+        <p>Five capital cities account for 72% of wins. Sydney alone has more than Victoria and Western Australia combined.</p>
+      </div>
+      <div>
+        <h3>Country music carries the regions</h3>
+        <p>Regional towns win Best Country Album often. Only 4 of 77 Album of the Year and Best Group wins came from outside a major city.</p>
+      </div>
+      <div>
+        <h3>The newest winners come from the margins</h3>
+        <p>Canberra, Tasmania and Milingimbi all won in the 2020s. Whether that continues is worth watching at the next ceremony.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <section class="meta" aria-labelledby="meta-title">
+      <h2 id="meta-title">About</h2>
+      <dl>
+        <dt>Author</dt><dd>Lee Wei Han</dd>
+        <dt>Unit</dt><dd>FIT3179 Data Visualisation 2, Monash University (Clayton)</dd>
+        <dt>Published</dt><dd>12 October 2026</dd>
+        <dt>Data to</dt><dd>2025 ARIA Music Awards</dd>
+        <dt>Built with</dt><dd>Vega-Lite 5 and Vega 5</dd>
+        <dt>Licence</dt><dd>Text and charts CC BY-SA 4.0. Data remains under its sources' licences.</dd>
+      </dl>
+    </section>
+    <section class="sources" aria-labelledby="src-title">
+      <h2 id="src-title">Data sources</h2>
+      <ol>
+        <li>Wikipedia, winner lists for <a href="https://en.wikipedia.org/wiki/ARIA_Award_for_Album_of_the_Year">ARIA Award for Album of the Year</a>, <a href="https://en.wikipedia.org/wiki/ARIA_Award_for_Best_Group">Best Group</a> and <a href="https://en.wikipedia.org/wiki/ARIA_Award_for_Best_Country_Album">Best Country Album</a>, plus each winner's article infobox for origin or birthplace. Retrieved 12 October 2026.</li>
+        <li>Australian Bureau of Statistics, <a href="https://www.abs.gov.au/statistics/people/population/national-state-and-territory-population/latest-release">National, state and territory population, March 2026</a> (released 17 September 2026).</li>
+        <li>Australian Institute of Health and Welfare, <a href="https://www.aihw.gov.au/reports/rural-remote-australians/rural-and-remote-health">Rural and remote health</a>, citing ABS Regional population by age and sex (population share by Remoteness Area, 30 June 2023).</li>
+        <li>Matthew Proctor, <a href="https://github.com/matthewproctor/australianpostcodes">Australian postcodes</a>: coordinates and ABS Remoteness Area 2021 for each hometown.</li>
+        <li>Rowan Hogan, <a href="https://github.com/rowanhogan/australian-states">Australian states GeoJSON</a>, simplified with mapshaper.</li>
+      </ol>
+    </section>
+    <section class="method" aria-labelledby="method-title">
+      <h2 id="method-title">Notes on method</h2>
+      <ul>
+        <li>The three awards were chosen because each has run every year since 1987 under a stable name. Wikipedia lists no Best Group winner for 1988, giving 116 wins.</li>
+        <li>Hometowns use the Wikipedia infobox "origin"; where absent, an Australian birthplace. Kasey Chambers's origin is listed as Adelaide, although she grew up on the Nullarbor and in Southend.</li>
+        <li>Shanley Del (born in New Zealand, no Australian origin listed) is not mapped. Fanny Lumsden and Casey Barnes have only a state listed, so they count for their state but have no point on the map.</li>
+        <li>Slim Dusty's birthplace, Nulla Nulla Creek, is not in the postcode list, so the nearby town of Kempsey supplies its coordinates. Amy Shark's Gold Coast uses Surfers Paradise.</li>
+        <li>Collaborations such as Kasey Chambers and Shane Nicholson are credited to the first-named artist.</li>
+        <li>Population figures are 2026 and 2023 estimates applied to all years. They describe Australia today, not at the time of each win.</li>
+      </ul>
+    </section>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>

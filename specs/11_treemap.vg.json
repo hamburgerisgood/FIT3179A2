@@ -1,0 +1,169 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v5.json",
+  "description": "Treemap: every winning artist as a rectangle sized by their number of wins, grouped by home state.",
+  "width": 640,
+  "height": 360,
+  "padding": 2,
+  "autosize": "none",
+  "data": [
+    {
+      "name": "totals",
+      "url": "data/aria_wins.csv",
+      "format": {"type": "csv"},
+      "transform": [
+        {"type": "filter", "expr": "datum.state !== 'Unknown'"},
+        {"type": "aggregate", "groupby": ["state"], "ops": ["count"], "as": ["total"]}
+      ]
+    },
+    {
+      "name": "tree",
+      "url": "data/aria_wins.csv",
+      "format": {"type": "csv"},
+      "transform": [
+        {"type": "filter", "expr": "datum.state !== 'Unknown'"},
+        {"type": "aggregate", "groupby": ["state", "artist"], "ops": ["count"], "as": ["wins"]},
+        {"type": "nest", "keys": ["state"], "generate": true},
+        {
+          "type": "treemap",
+          "field": "wins",
+          "sort": {"field": "value", "order": "descending"},
+          "round": true,
+          "method": "squarify",
+          "ratio": 1.4,
+          "paddingInner": 2,
+          "paddingTop": 18,
+          "size": [{"signal": "width"}, {"signal": "height + 18"}]
+        }
+      ]
+    },
+    {
+      "name": "states",
+      "source": "tree",
+      "transform": [
+        {"type": "filter", "expr": "datum.depth === 1"},
+        {"type": "lookup", "from": "totals", "key": "state", "fields": ["key"], "values": ["total"]}
+      ]
+    },
+    {
+      "name": "artists",
+      "source": "tree",
+      "transform": [{"type": "filter", "expr": "datum.depth === 2"}]
+    }
+  ],
+  "scales": [
+    {
+      "name": "colour",
+      "type": "ordinal",
+      "domain": ["NSW", "VIC", "QLD", "WA", "SA", "TAS", "ACT", "NT"],
+      "range": [
+        "#0072B2",
+        "#CC79A7",
+        "#D55E00",
+        "#E69F00",
+        "#009E73",
+        "#56B4E9",
+        "#8c7b6b",
+        "#7a3b14"
+      ]
+    }
+  ],
+  "marks": [
+    {
+      "type": "group",
+      "encode": {
+        "enter": {
+          "x": {"value": 0},
+          "y": {"value": -18},
+          "width": {"signal": "width"},
+          "height": {"signal": "height + 18"}
+        }
+      },
+      "marks": [
+        {
+          "type": "rect",
+          "from": {"data": "states"},
+          "encode": {
+            "enter": {
+              "x": {"field": "x0"},
+              "y": {"field": "y0"},
+              "x2": {"field": "x1"},
+              "y2": {"field": "y1"},
+              "fill": {"value": "#efe8dc"}
+            }
+          }
+        },
+        {
+          "type": "text",
+          "from": {"data": "states"},
+          "encode": {
+            "enter": {
+              "x": {"signal": "datum.x0 + 4"},
+              "y": {"signal": "datum.y0 + 13"},
+              "text": {
+                "signal": "datum.x1 - datum.x0 > 50 ? datum.key + ' · ' + datum.total : datum.key"
+              },
+              "fontSize": {"value": 11.5},
+              "fontWeight": {"value": 700},
+              "fill": {"value": "#1f1c18"},
+              "limit": {"signal": "datum.x1 - datum.x0 - 4"}
+            }
+          }
+        },
+        {
+          "type": "rect",
+          "from": {"data": "artists"},
+          "encode": {
+            "enter": {
+              "x": {"field": "x0"},
+              "y": {"field": "y0"},
+              "x2": {"field": "x1"},
+              "y2": {"field": "y1"},
+              "fill": {"scale": "colour", "field": "state"},
+              "fillOpacity": {"signal": "0.55 + 0.45 * min(1, datum.wins / 6)"},
+              "tooltip": {
+                "signal": "{'title': datum.artist, 'Home state': datum.state, 'Wins (these three awards)': datum.wins}"
+              }
+            },
+            "update": {"stroke": {"value": "#fbf8f3"}, "strokeWidth": {"value": 0}},
+            "hover": {"stroke": {"value": "#1f1c18"}, "strokeWidth": {"value": 2}}
+          }
+        },
+        {
+          "type": "text",
+          "from": {"data": "artists"},
+          "interactive": false,
+          "encode": {
+            "enter": {
+              "x": {"signal": "datum.x0 + 4"},
+              "y": {"signal": "datum.y0 + 12"},
+              "text": {
+                "signal": "(datum.x1 - datum.x0) > 34 && (datum.y1 - datum.y0) > 16 ? datum.artist : ''"
+              },
+              "limit": {"signal": "datum.x1 - datum.x0 - 6"},
+              "fontSize": {"signal": "datum.wins >= 5 ? 11.5 : 9.5"},
+              "fontWeight": {"signal": "datum.wins >= 5 ? 700 : 500"},
+              "fill": {"value": "#fffaf0"}
+            }
+          }
+        },
+        {
+          "type": "text",
+          "from": {"data": "artists"},
+          "interactive": false,
+          "encode": {
+            "enter": {
+              "x": {"signal": "datum.x0 + 4"},
+              "y": {"signal": "datum.y0 + 25"},
+              "text": {
+                "signal": "(datum.x1 - datum.x0) > 30 && (datum.y1 - datum.y0) > 30 ? datum.wins + (datum.wins === 1 ? ' win' : ' wins') : ''"
+              },
+              "fontSize": {"value": 9.5},
+              "fill": {"value": "#fffaf0"},
+              "fillOpacity": {"value": 0.9}
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
