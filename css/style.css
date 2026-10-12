@@ -63,7 +63,12 @@ p { margin: 0; }
 .stat b { font-family: var(--display); font-size: var(--step-3); font-weight: 700; line-height: 1; color: var(--paper); font-variant-numeric: tabular-nums; }
 .stat span { font-family: var(--display); font-size: var(--step--1); color: #b9b6d3; }
 
-/* ---------- about box ---------- */
+/* ---------- intro ---------- */
+.intro { max-width: 46rem; margin: clamp(32px, 5vw, 56px) auto; display: grid; gap: 1em; }
+.intro p { font-size: 1.08rem; line-height: 1.65; }
+.intro b { font-family: var(--display); }
+
+/* ---------- old about box (unused) ---------- */
 .about { margin-block: clamp(32px, 5vw, 56px); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; padding: 24px; background: var(--panel); border-radius: 6px; }
 .about h2 { grid-column: 1 / -1; font-size: var(--step-1); }
 .about div { display: grid; gap: 4px; align-content: start; min-width: 0; }
@@ -89,7 +94,7 @@ p { margin: 0; }
 .row.pair .fig:first-child { grid-column: 1 / span 6; }
 
 .fig-head { display: grid; gap: 2px; }
-.idiom { font-family: var(--display); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.idiom { justify-self: start; font-family: var(--display); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold-deep); background: var(--panel); border: 1px solid var(--rule); border-radius: 999px; padding: 3px 12px; margin-bottom: 6px; }
 .fig-head h3 { font-size: var(--step-1); font-weight: 700; line-height: 1.2; }
 .fig-head p { font-size: 0.93rem; color: var(--muted); line-height: 1.45; }
 .chart { min-width: 0; overflow-x: auto; }
