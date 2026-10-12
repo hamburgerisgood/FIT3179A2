@@ -64,7 +64,7 @@ p { margin: 0; }
 .stat span { font-family: var(--display); font-size: var(--step--1); color: #b9b6d3; }
 
 /* ---------- intro ---------- */
-.intro { max-width: 46rem; margin: clamp(32px, 5vw, 56px) auto; display: grid; gap: 1em; }
+.intro { max-width: 46rem; margin: clamp(32px, 5vw, 56px) 0; display: grid; gap: 1em; }
 .intro p { font-size: 1.08rem; line-height: 1.65; }
 .intro b { font-family: var(--display); }
 
