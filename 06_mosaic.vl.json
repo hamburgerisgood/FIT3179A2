@@ -1,0 +1,447 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "description": "Marimekko (mosaic) chart: column width = a state's share of all wins; segments = which award those wins came from.",
+  "width": 960,
+  "height": 420,
+  "data": {
+    "url": "data/aria_wins.csv"
+  },
+  "transform": [
+    {
+      "filter": "datum.state !== 'Unknown'"
+    },
+    {
+      "aggregate": [
+        {
+          "op": "count",
+          "as": "n"
+        }
+      ],
+      "groupby": [
+        "state",
+        "category"
+      ]
+    },
+    {
+      "joinaggregate": [
+        {
+          "op": "sum",
+          "field": "n",
+          "as": "state_total"
+        }
+      ],
+      "groupby": [
+        "state"
+      ]
+    },
+    {
+      "calculate": "indexof(['Album of the Year', 'Best Group', 'Best Country Album'], datum.category)",
+      "as": "cat_order"
+    },
+    {
+      "stack": "n",
+      "groupby": [],
+      "as": [
+        "s0",
+        "s1"
+      ],
+      "offset": "normalize",
+      "sort": [
+        {
+          "field": "state_total",
+          "order": "descending"
+        },
+        {
+          "field": "state",
+          "order": "ascending"
+        },
+        {
+          "field": "cat_order",
+          "order": "ascending"
+        }
+      ]
+    },
+    {
+      "window": [
+        {
+          "op": "min",
+          "field": "s0",
+          "as": "x"
+        },
+        {
+          "op": "max",
+          "field": "s1",
+          "as": "x2"
+        }
+      ],
+      "groupby": [
+        "state"
+      ],
+      "frame": [
+        null,
+        null
+      ]
+    },
+    {
+      "stack": "n",
+      "groupby": [
+        "state"
+      ],
+      "as": [
+        "y",
+        "y2"
+      ],
+      "offset": "normalize",
+      "sort": [
+        {
+          "field": "cat_order",
+          "order": "ascending"
+        }
+      ]
+    },
+    {
+      "calculate": "datum.n / datum.state_total",
+      "as": "pct_in_state"
+    }
+  ],
+  "layer": [
+    {
+      "mark": {
+        "type": "rect",
+        "stroke": "#fbf8f3",
+        "strokeWidth": 2
+      },
+      "encoding": {
+        "x": {
+          "field": "x",
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              0,
+              1
+            ]
+          },
+          "axis": {
+            "format": "%",
+            "title": "Share of all wins (column width)",
+            "values": [
+              0,
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "grid": false
+          }
+        },
+        "x2": {
+          "field": "x2"
+        },
+        "y": {
+          "field": "y",
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              0,
+              1.28
+            ]
+          },
+          "axis": {
+            "format": "%",
+            "title": "Share of the state's wins",
+            "values": [
+              0,
+              0.5,
+              1
+            ],
+            "grid": false,
+            "domain": false
+          }
+        },
+        "y2": {
+          "field": "y2"
+        },
+        "color": {
+          "field": "category",
+          "type": "nominal",
+          "title": null,
+          "scale": {
+            "domain": [
+              "Album of the Year",
+              "Best Group",
+              "Best Country Album"
+            ],
+            "range": [
+              "#c9971f",
+              "#4a4e8c",
+              "#6f8f3d"
+            ]
+          },
+          "legend": {
+            "orient": "bottom",
+            "direction": "horizontal",
+            "symbolType": "square",
+            "offset": 6
+          }
+        },
+        "tooltip": [
+          {
+            "field": "state",
+            "title": "State"
+          },
+          {
+            "field": "category",
+            "title": "Award"
+          },
+          {
+            "field": "n",
+            "title": "Wins"
+          },
+          {
+            "field": "pct_in_state",
+            "title": "Share of this state's wins",
+            "format": ".0%"
+          }
+        ]
+      }
+    },
+    {
+      "transform": [
+        {
+          "filter": "datum.n >= 3"
+        },
+        {
+          "calculate": "(datum.x + datum.x2) / 2",
+          "as": "xm"
+        },
+        {
+          "calculate": "(datum.y + datum.y2) / 2",
+          "as": "ym"
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "fontSize": 11,
+        "fontWeight": 600,
+        "color": "#fffaf0"
+      },
+      "encoding": {
+        "x": {
+          "field": "xm",
+          "type": "quantitative"
+        },
+        "y": {
+          "field": "ym",
+          "type": "quantitative"
+        },
+        "text": {
+          "field": "n"
+        }
+      }
+    },
+    {
+      "transform": [
+        {
+          "aggregate": [
+            {
+              "op": "min",
+              "field": "x",
+              "as": "x"
+            },
+            {
+              "op": "max",
+              "field": "x2",
+              "as": "x2"
+            },
+            {
+              "op": "max",
+              "field": "state_total",
+              "as": "total"
+            }
+          ],
+          "groupby": [
+            "state"
+          ]
+        },
+        {
+          "calculate": "(datum.x + datum.x2) / 2",
+          "as": "xm"
+        },
+        {
+          "calculate": "datum.total >= 9 ? datum.state : ''",
+          "as": "label"
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "baseline": "bottom",
+        "dy": -4,
+        "fontSize": 12,
+        "fontWeight": 700,
+        "color": "#1f1c18"
+      },
+      "encoding": {
+        "x": {
+          "field": "xm",
+          "type": "quantitative"
+        },
+        "y": {
+          "datum": 1
+        },
+        "text": {
+          "field": "label"
+        }
+      }
+    },
+    {
+      "transform": [
+        {
+          "aggregate": [
+            {
+              "op": "min",
+              "field": "x",
+              "as": "x"
+            },
+            {
+              "op": "max",
+              "field": "x2",
+              "as": "x2"
+            },
+            {
+              "op": "max",
+              "field": "state_total",
+              "as": "total"
+            }
+          ],
+          "groupby": [
+            "state"
+          ]
+        },
+        {
+          "calculate": "(datum.x + datum.x2) / 2",
+          "as": "xm"
+        },
+        {
+          "filter": "datum.total < 9"
+        },
+        {
+          "window": [
+            {
+              "op": "row_number",
+              "as": "rk"
+            }
+          ],
+          "sort": [
+            {
+              "field": "xm",
+              "order": "ascending"
+            }
+          ]
+        },
+        {
+          "calculate": "1.07 + (datum.rk - 1) * 0.085",
+          "as": "ylab"
+        },
+        {
+          "calculate": "datum.state + ' · ' + datum.total + (datum.total === 1 ? ' win' : ' wins')",
+          "as": "label"
+        }
+      ],
+      "mark": {
+        "type": "rule",
+        "stroke": "#6b6157",
+        "strokeWidth": 1
+      },
+      "encoding": {
+        "x": {
+          "field": "xm",
+          "type": "quantitative"
+        },
+        "y": {
+          "field": "ylab",
+          "type": "quantitative"
+        },
+        "y2": {
+          "datum": 1
+        }
+      }
+    },
+    {
+      "transform": [
+        {
+          "aggregate": [
+            {
+              "op": "min",
+              "field": "x",
+              "as": "x"
+            },
+            {
+              "op": "max",
+              "field": "x2",
+              "as": "x2"
+            },
+            {
+              "op": "max",
+              "field": "state_total",
+              "as": "total"
+            }
+          ],
+          "groupby": [
+            "state"
+          ]
+        },
+        {
+          "calculate": "(datum.x + datum.x2) / 2",
+          "as": "xm"
+        },
+        {
+          "filter": "datum.total < 9"
+        },
+        {
+          "window": [
+            {
+              "op": "row_number",
+              "as": "rk"
+            }
+          ],
+          "sort": [
+            {
+              "field": "xm",
+              "order": "ascending"
+            }
+          ]
+        },
+        {
+          "calculate": "1.07 + (datum.rk - 1) * 0.085",
+          "as": "ylab"
+        },
+        {
+          "calculate": "datum.state + ' · ' + datum.total + (datum.total === 1 ? ' win' : ' wins')",
+          "as": "label"
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "align": "right",
+        "baseline": "middle",
+        "dx": -5,
+        "fontSize": 11.5,
+        "fontWeight": 700,
+        "color": "#1f1c18"
+      },
+      "encoding": {
+        "x": {
+          "field": "xm",
+          "type": "quantitative"
+        },
+        "y": {
+          "field": "ylab",
+          "type": "quantitative"
+        },
+        "text": {
+          "field": "label"
+        }
+      }
+    }
+  ]
+}

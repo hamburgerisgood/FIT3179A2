@@ -1,0 +1,140 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v5.json",
+  "description": "Beeswarm: every one of the 116 wins as a dot, placed by year and by how remote the winner's hometown is (ABS Remoteness Areas), coloured by award.",
+  "width": 590,
+  "height": 330,
+  "padding": {"left": 4, "right": 4, "top": 4, "bottom": 4},
+  "autosize": "pad",
+  "data": [
+    {
+      "name": "wins",
+      "url": "data/aria_wins.csv",
+      "format": {"type": "csv", "parse": {"year": "number"}},
+      "transform": [
+        {"type": "formula", "as": "fx", "expr": "scale('x', datum.year)"},
+        {
+          "type": "formula",
+          "as": "row",
+          "expr": "datum.remoteness === 'Unknown' ? 'Not recorded' : datum.remoteness"
+        },
+        {"type": "formula", "as": "fy", "expr": "scale('y', datum.row) + bandwidth('y') / 2"}
+      ]
+    },
+    {
+      "name": "notes",
+      "values": [
+        {
+          "year": 2002.5,
+          "row": "Inner regional",
+          "text": "Outside the big cities, nearly every dot is green: country music",
+          "dy": 0
+        },
+        {"year": 1990, "row": "Remote", "text": "Ian Moss, Alice Springs (1990)", "dy": 0},
+        {"year": 2022, "row": "Very remote", "text": "Baker Boy, Milingimbi (2022)", "dy": 0}
+      ]
+    }
+  ],
+  "scales": [
+    {"name": "x", "type": "linear", "domain": [1986, 2026], "range": "width", "zero": false},
+    {
+      "name": "y",
+      "type": "band",
+      "domain": [
+        "Major city",
+        "Inner regional",
+        "Outer regional",
+        "Remote",
+        "Very remote",
+        "Not recorded"
+      ],
+      "range": "height",
+      "paddingInner": 0.05
+    },
+    {
+      "name": "colour",
+      "type": "ordinal",
+      "domain": ["Album of the Year", "Best Group", "Best Country Album"],
+      "range": ["#c9971f", "#4a4e8c", "#6f8f3d"]
+    }
+  ],
+  "axes": [
+    {
+      "orient": "bottom",
+      "scale": "x",
+      "format": "d",
+      "values": [1987, 1995, 2000, 2005, 2010, 2015, 2020, 2025],
+      "grid": true,
+      "gridColor": "#efe9df",
+      "domain": false,
+      "ticks": false
+    },
+    {
+      "orient": "left",
+      "scale": "y",
+      "domain": false,
+      "ticks": false,
+      "labelFontWeight": 600,
+      "labelFontSize": 11.5,
+      "labelColor": "#1f1c18",
+      "labelLimit": 140
+    }
+  ],
+  "legends": [
+    {
+      "fill": "colour",
+      "orient": "top",
+      "direction": "horizontal",
+      "symbolType": "circle",
+      "title": null,
+      "columnPadding": 14
+    }
+  ],
+  "marks": [
+    {
+      "name": "dots",
+      "type": "symbol",
+      "from": {"data": "wins"},
+      "encode": {
+        "enter": {
+          "size": {"value": 90},
+          "fill": {"scale": "colour", "field": "category"},
+          "stroke": {"value": "#fbf8f3"},
+          "strokeWidth": {"value": 1},
+          "tooltip": {
+            "signal": "{'title': datum.winner, 'Award': datum.category + ' ' + datum.year, 'For': datum.work, 'Hometown': datum.place ? datum.place + ', ' + datum.state : 'not recorded', 'ABS remoteness': datum.remoteness}"
+          }
+        },
+        "update": {"x": {"field": "x"}, "y": {"field": "y"}}
+      },
+      "transform": [
+        {
+          "type": "force",
+          "static": true,
+          "iterations": 300,
+          "forces": [
+            {"force": "collide", "radius": 6, "iterations": 2},
+            {"force": "x", "x": "datum.fx", "strength": 0.9},
+            {"force": "y", "y": "datum.fy", "strength": 0.12}
+          ]
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "from": {"data": "notes"},
+      "encode": {
+        "enter": {
+          "x": {"scale": "x", "field": "year"},
+          "y": {"signal": "scale('y', datum.row) + bandwidth('y') / 2 - 13"},
+          "align": {"signal": "datum.year > 2015 ? 'right' : 'left'"},
+          "dx": {"signal": "datum.year > 2015 ? 4 : -4"},
+          "baseline": {"value": "middle"},
+          "text": {"field": "text"},
+          "fontSize": {"value": 10.5},
+          "fontStyle": {"value": "italic"},
+          "fill": {"value": "#5f574d"}
+        }
+      }
+    }
+  ]
+}
