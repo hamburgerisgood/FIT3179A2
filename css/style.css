@@ -94,7 +94,7 @@ p { margin: 0; }
 .row.pair .fig:first-child { grid-column: 1 / span 6; }
 .row.full .story { grid-column: 1 / -1; max-width: 70ch; }
 .row.full .fig { grid-column: 1 / -1; }
-.row.pair { align-items: stretch; }
+.row.pair { align-items: start; }
 .row.pair .fig { display: flex; flex-direction: column; gap: 10px; }
 .row.pair .fig figcaption { margin-top: auto; }
 .row.solo .story { grid-column: 1 / -1; max-width: none; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 32px; align-items: start; }
@@ -158,3 +158,5 @@ footer dd { margin: 0; }
   .method ul { columns: 1; }
 }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+.fig-head .src { display:block; margin-top:.35em; font-size:.85em; opacity:.85; }
+.row.pair .fig { gap: 8px; }
