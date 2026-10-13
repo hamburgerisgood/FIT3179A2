@@ -160,3 +160,6 @@ footer dd { margin: 0; }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
 .fig-head .src { display:block; margin-top:.35em; font-size:.85em; opacity:.85; }
 .row.pair .fig { gap: 8px; }
+.vega-bind-radio { display:inline-flex; flex-wrap:wrap; gap:6px 18px; vertical-align:middle; }
+.vega-bind-radio label { display:inline-flex; align-items:center; gap:6px; margin:0; }
+.vega-bind { margin-top:10px; }
