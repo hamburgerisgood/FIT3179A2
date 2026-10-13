@@ -1,12 +1,54 @@
 {
   "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-  "description": "Matrix (heatmap-style) of every winner: one cell per award per year, coloured by the state of the winner's hometown. Click a state in the legend to highlight it.",
-  "data": {"url": "data/aria_wins.csv", "format": {"type": "csv", "parse": {"year": "number"}}},
-  "width": {"step": 15.5},
-  "height": {"step": 34},
+  "description": "Heatmap of every winner: one cell per award per year, shaded by the winner's total career wins across the three awards. Hover a cell to light up the same artist.",
+  "data": {
+    "url": "data/aria_wins.csv",
+    "format": {
+      "type": "csv",
+      "parse": {
+        "year": "number"
+      }
+    }
+  },
+  "transform": [
+    {
+      "joinaggregate": [
+        {
+          "op": "count",
+          "as": "career"
+        }
+      ],
+      "groupby": [
+        "artist"
+      ]
+    }
+  ],
+  "width": {
+    "step": 14
+  },
+  "height": {
+    "step": 40
+  },
   "layer": [
     {
-      "mark": {"type": "rect", "stroke": "#fbf8f3", "strokeWidth": 1.5, "cornerRadius": 2},
+      "mark": {
+        "type": "rect",
+        "stroke": "#fbf8f3",
+        "strokeWidth": 1
+      },
+      "params": [
+        {
+          "name": "hoverArtist",
+          "select": {
+            "type": "point",
+            "fields": [
+              "artist"
+            ],
+            "on": "mouseover",
+            "clear": "mouseout"
+          }
+        }
+      ],
       "encoding": {
         "x": {
           "field": "year",
@@ -67,7 +109,11 @@
           "field": "category",
           "type": "nominal",
           "title": null,
-          "sort": ["Album of the Year", "Best Group", "Best Country Album"],
+          "sort": [
+            "Album of the Year",
+            "Best Group",
+            "Best Country Album"
+          ],
           "axis": {
             "domain": false,
             "ticks": false,
@@ -77,65 +123,129 @@
           }
         },
         "color": {
-          "field": "state",
-          "type": "nominal",
-          "title": "Winner's home state (click to highlight)",
+          "field": "career",
+          "type": "quantitative",
+          "title": "Winner's career wins (all three awards)",
           "scale": {
-            "domain": ["NSW", "VIC", "QLD", "WA", "SA", "TAS", "ACT", "NT", "Unknown"],
+            "type": "linear",
+            "domain": [
+              1,
+              11
+            ],
             "range": [
-              "#0072B2",
-              "#CC79A7",
-              "#D55E00",
-              "#E69F00",
-              "#009E73",
-              "#56B4E9",
-              "#8c7b6b",
-              "#7a3b14",
-              "#d8d1c5"
-            ]
+              "#f6ecd3",
+              "#e0b660",
+              "#a36a12",
+              "#5c3a08"
+            ],
+            "interpolate": "hcl"
           },
           "legend": {
             "orient": "top",
             "direction": "horizontal",
-            "symbolType": "square",
-            "columns": 9,
+            "gradientLength": 240,
             "titleLimit": 400,
-            "labelExpr": "datum.label === 'Unknown' ? 'Not recorded' : datum.label"
+            "values": [
+              1,
+              3,
+              5,
+              7,
+              9,
+              11
+            ]
           }
         },
-        "opacity": {"condition": {"param": "stateSel", "value": 1}, "value": 0.15},
+        "opacity": {
+          "condition": {
+            "param": "hoverArtist",
+            "empty": true,
+            "value": 1
+          },
+          "value": 0.22
+        },
         "tooltip": [
-          {"field": "year", "title": "Year"},
-          {"field": "category", "title": "Award"},
-          {"field": "winner", "title": "Winner"},
-          {"field": "work", "title": "For"},
-          {"field": "place", "title": "Hometown"},
-          {"field": "state", "title": "State"}
+          {
+            "field": "year",
+            "title": "Year"
+          },
+          {
+            "field": "category",
+            "title": "Award"
+          },
+          {
+            "field": "winner",
+            "title": "Winner"
+          },
+          {
+            "field": "work",
+            "title": "For"
+          },
+          {
+            "field": "artist",
+            "title": "Artist"
+          },
+          {
+            "field": "career",
+            "title": "Artist's career wins"
+          },
+          {
+            "field": "place",
+            "title": "Hometown"
+          },
+          {
+            "field": "state",
+            "title": "State"
+          }
         ]
-      },
-      "params": [
-        {"name": "stateSel", "select": {"type": "point", "fields": ["state"]}, "bind": "legend"}
-      ]
+      }
     },
     {
       "transform": [
-        {"joinaggregate": [{"op": "count", "as": "career"}], "groupby": ["artist"]},
-        {"filter": "datum.career >= 5"},
+        {
+          "filter": "datum.career >= 5"
+        },
         {
           "calculate": "{'Kasey Chambers':'KC','Tame Impala':'TI','Troy Cassar-Daley':'TC','Powderfinger':'P'}[datum.artist]",
           "as": "initials"
         }
       ],
-      "mark": {"type": "text", "fontSize": 8.5, "fontWeight": 700, "color": "#fffaf0"},
+      "mark": {
+        "type": "text",
+        "fontSize": 8.5,
+        "fontWeight": 700
+      },
       "encoding": {
-        "x": {"field": "year", "type": "ordinal"},
+        "x": {
+          "field": "year",
+          "type": "ordinal"
+        },
         "y": {
           "field": "category",
           "type": "nominal",
-          "sort": ["Album of the Year", "Best Group", "Best Country Album"]
+          "sort": [
+            "Album of the Year",
+            "Best Group",
+            "Best Country Album"
+          ]
         },
-        "text": {"field": "initials"},
-        "opacity": {"condition": {"param": "stateSel", "value": 1}, "value": 0.15}
+        "text": {
+          "field": "initials"
+        },
+        "color": {
+          "condition": {
+            "test": "datum.career >= 8",
+            "value": "#fffaf0"
+          },
+          "value": "#1f1c18"
+        },
+        "opacity": {
+          "condition": {
+            "param": "hoverArtist",
+            "empty": true,
+            "value": 1
+          },
+          "value": 0.22
+        }
       }
     }
   ]

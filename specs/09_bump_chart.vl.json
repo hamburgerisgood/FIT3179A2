@@ -1,7 +1,7 @@
 {
   "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "description": "Bump chart: running rank of the ten artists with three or more wins, measured every five years. Rank 1 = most wins so far. Ties are broken by total career wins, then alphabetically.",
-  "width": 600,
+  "width": 540,
   "height": 330,
   "data": {"url": "data/aria_wins.csv", "format": {"type": "csv", "parse": {"year": "number"}}},
   "transform": [

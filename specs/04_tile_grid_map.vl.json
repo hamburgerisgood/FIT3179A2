@@ -21,10 +21,10 @@
     "row": {"field": "tile_row", "type": "ordinal", "header": null},
     "column": {"field": "tile_col", "type": "ordinal", "header": null}
   },
-  "spacing": {"row": 8, "column": 8},
+  "spacing": {"row": 10, "column": 10},
   "spec": {
-    "width": 170,
-    "height": 104,
+    "width": 290,
+    "height": 135,
     "encoding": {
       "x": {
         "field": "decade",
@@ -44,8 +44,8 @@
           "type": "rect",
           "x": 0,
           "y": 0,
-          "x2": 170,
-          "y2": 104,
+          "x2": 290,
+          "y2": 135,
           "fill": "#f1ebe1",
           "cornerRadius": 3
         },
@@ -58,7 +58,7 @@
             "field": "wins",
             "type": "quantitative",
             "aggregate": "sum",
-            "scale": {"domain": [0, 12], "range": [88, 30]},
+            "scale": {"domain": [0, 12], "range": [112, 42]},
             "axis": null
           },
           "color": {
@@ -87,12 +87,12 @@
             "groupby": ["state", "decade"]
           }
         ],
-        "mark": {"type": "text", "dy": -6, "fontSize": 9.5, "color": "#5f574d"},
+        "mark": {"type": "text", "dy": -6, "fontSize": 11, "color": "#5f574d"},
         "encoding": {
           "y": {
             "field": "total",
             "type": "quantitative",
-            "scale": {"domain": [0, 12], "range": [88, 30]}
+            "scale": {"domain": [0, 12], "range": [112, 42]}
           },
           "text": {"field": "total"}
         }
@@ -102,7 +102,7 @@
           {"aggregate": [{"op": "count", "as": "n"}], "groupby": ["state", "decade"]},
           {"calculate": "'’' + slice(datum.decade, 2)", "as": "short"}
         ],
-        "mark": {"type": "text", "y": 99, "fontSize": 9, "color": "#8a7f72"},
+        "mark": {"type": "text", "y": 126, "fontSize": 10.5, "color": "#8a7f72"},
         "encoding": {"text": {"field": "short"}}
       },
       {
@@ -114,11 +114,11 @@
           "type": "text",
           "align": "left",
           "baseline": "top",
-          "fontSize": 12.5,
+          "fontSize": 14,
           "fontWeight": 700,
           "color": "#1f1c18",
-          "x": 8,
-          "y": 7
+          "x": 10,
+          "y": 9
         },
         "encoding": {"x": null, "text": {"field": "label"}}
       }

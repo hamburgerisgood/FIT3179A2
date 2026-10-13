@@ -9,49 +9,143 @@
       "value": "All three awards",
       "bind": {
         "input": "radio",
-        "options": ["All three awards", "Album of the Year", "Best Group", "Best Country Album"],
+        "options": [
+          "All three awards",
+          "Album of the Year",
+          "Best Group",
+          "Best Country Album"
+        ],
         "name": "Show "
+      }
+    },
+    {
+      "name": "yearFrom",
+      "value": 1987,
+      "bind": {
+        "input": "range",
+        "min": 1987,
+        "max": 2025,
+        "step": 1,
+        "name": "From year "
+      }
+    },
+    {
+      "name": "yearTo",
+      "value": 2025,
+      "bind": {
+        "input": "range",
+        "min": 1987,
+        "max": 2025,
+        "step": 1,
+        "name": "To year "
       }
     }
   ],
-  "projection": {"type": "conicEqualArea", "parallels": [-18, -36], "rotate": [-132, 0]},
+  "projection": {
+    "type": "conicEqualArea",
+    "parallels": [
+      -18,
+      -36
+    ],
+    "rotate": [
+      -132,
+      0
+    ]
+  },
   "layer": [
     {
       "data": {
         "url": "data/au_states.topo.json",
-        "format": {"type": "topojson", "feature": "states"}
+        "format": {
+          "type": "topojson",
+          "feature": "states"
+        }
       },
-      "mark": {"type": "geoshape", "fill": "#ebe4d8", "stroke": "#fbf8f3", "strokeWidth": 1.5}
+      "mark": {
+        "type": "geoshape",
+        "fill": "#ebe4d8",
+        "stroke": "#fbf8f3",
+        "strokeWidth": 1.5
+      }
     },
     {
       "data": {
         "url": "data/aria_wins.csv",
-        "format": {"type": "csv", "parse": {"year": "number", "lat": "number", "lon": "number"}}
+        "format": {
+          "type": "csv",
+          "parse": {
+            "year": "number",
+            "lat": "number",
+            "lon": "number"
+          }
+        }
       },
       "transform": [
-        {"filter": "category === 'All three awards' || datum.category === category"},
-        {"filter": "isValid(datum.lat)"},
+        {
+          "filter": "(category === 'All three awards' || datum.category === category) && datum.year >= min(yearFrom, yearTo) && datum.year <= max(yearFrom, yearTo)"
+        },
+        {
+          "filter": "isValid(datum.lat)"
+        },
         {
           "aggregate": [
-            {"op": "count", "as": "wins"},
-            {"op": "distinct", "field": "artist", "as": "artists"}
+            {
+              "op": "count",
+              "as": "wins"
+            },
+            {
+              "op": "distinct",
+              "field": "artist",
+              "as": "artists"
+            }
           ],
-          "groupby": ["place", "state", "lat", "lon", "remoteness"]
+          "groupby": [
+            "place",
+            "state",
+            "lat",
+            "lon",
+            "remoteness"
+          ]
         }
       ],
       "layer": [
         {
-          "mark": {"type": "circle", "opacity": 0.85, "stroke": "#fbf8f3", "strokeWidth": 1},
+          "mark": {
+            "type": "circle",
+            "opacity": 0.85,
+            "stroke": "#fbf8f3",
+            "strokeWidth": 1
+          },
           "encoding": {
-            "longitude": {"field": "lon", "type": "quantitative"},
-            "latitude": {"field": "lat", "type": "quantitative"},
+            "longitude": {
+              "field": "lon",
+              "type": "quantitative"
+            },
+            "latitude": {
+              "field": "lat",
+              "type": "quantitative"
+            },
             "size": {
               "field": "wins",
               "type": "quantitative",
-              "scale": {"domain": [1, 36], "range": [45, 2600]},
+              "scale": {
+                "domain": [
+                  1,
+                  36
+                ],
+                "range": [
+                  45,
+                  2600
+                ]
+              },
               "legend": {
                 "title": "Wins",
-                "values": [1, 5, 15, 35],
+                "values": [
+                  1,
+                  5,
+                  15,
+                  35
+                ],
                 "orient": "bottom-left",
                 "direction": "horizontal",
                 "symbolFillColor": "#bdb3a4",
@@ -70,24 +164,57 @@
                   "Remote",
                   "Very remote"
                 ],
-                "range": ["#3b3f73", "#4f9d8a", "#d8a031", "#c4552d", "#7a2a1a"]
+                "range": [
+                  "#3b3f73",
+                  "#4f9d8a",
+                  "#d8a031",
+                  "#c4552d",
+                  "#7a2a1a"
+                ]
               },
-              "legend": {"orient": "top-right", "symbolType": "circle", "offset": 4}
+              "legend": {
+                "orient": "top-right",
+                "symbolType": "circle",
+                "offset": 4
+              }
             },
-            "order": {"field": "wins", "sort": "descending"},
+            "order": {
+              "field": "wins",
+              "sort": "descending"
+            },
             "tooltip": [
-              {"field": "place", "title": "Hometown"},
-              {"field": "state", "title": "State"},
-              {"field": "remoteness", "title": "ABS remoteness"},
-              {"field": "wins", "title": "ARIA wins"},
-              {"field": "artists", "title": "Different artists"}
+              {
+                "field": "place",
+                "title": "Hometown"
+              },
+              {
+                "field": "state",
+                "title": "State"
+              },
+              {
+                "field": "remoteness",
+                "title": "ABS remoteness"
+              },
+              {
+                "field": "wins",
+                "title": "ARIA wins"
+              },
+              {
+                "field": "artists",
+                "title": "Different artists"
+              }
             ]
           }
         },
         {
           "transform": [
-            {"filter": "datum.wins >= 4 || datum.place === 'Kerang'"},
-            {"calculate": "datum.place + ' ' + datum.wins", "as": "label"},
+            {
+              "filter": "datum.wins >= 4 || datum.place === 'Kerang' || abs(yearTo - yearFrom) < 6"
+            },
+            {
+              "calculate": "datum.place + ' ' + datum.wins",
+              "as": "label"
+            },
             {
               "calculate": "datum.lat + (datum.place === 'Newcastle' ? 0.9 : datum.place === 'Sydney' ? -1.3 : 0)",
               "as": "label_lat"
@@ -103,9 +230,18 @@
             "color": "#1f1c18"
           },
           "encoding": {
-            "longitude": {"field": "lon", "type": "quantitative"},
-            "latitude": {"field": "label_lat", "type": "quantitative"},
-            "text": {"field": "label", "type": "nominal"}
+            "longitude": {
+              "field": "lon",
+              "type": "quantitative"
+            },
+            "latitude": {
+              "field": "label_lat",
+              "type": "quantitative"
+            },
+            "text": {
+              "field": "label",
+              "type": "nominal"
+            }
           }
         }
       ]
@@ -138,13 +274,27 @@
         "lineHeight": 14
       },
       "encoding": {
-        "longitude": {"field": "lon", "type": "quantitative"},
-        "latitude": {"field": "lat", "type": "quantitative"},
-        "text": {"field": "lines", "type": "nominal"}
+        "longitude": {
+          "field": "lon",
+          "type": "quantitative"
+        },
+        "latitude": {
+          "field": "lat",
+          "type": "quantitative"
+        },
+        "text": {
+          "field": "lines",
+          "type": "nominal"
+        }
       },
       "transform": [
-        {"filter": "category === 'All three awards' || category === datum.showFor"},
-        {"calculate": "[datum.text, datum.text2]", "as": "lines"}
+        {
+          "filter": "(category === 'All three awards' || category === datum.showFor) && (datum.showFor !== 'Album of the Year' || (min(yearFrom, yearTo) <= 2022 && max(yearFrom, yearTo) >= 2022))"
+        },
+        {
+          "calculate": "[datum.text, datum.text2]",
+          "as": "lines"
+        }
       ]
     }
   ]

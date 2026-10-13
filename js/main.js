@@ -30,6 +30,13 @@ async function start() {
     const target = document.querySelector(el);
     if (!target) continue;
     vegaEmbed(el, spec, { config: theme, actions: false, renderer: "svg" })
+      .then(() => {
+        // Give the SVG a viewBox so it scales down to fit its column instead of scrolling sideways.
+        const svg = target.querySelector("svg");
+        if (svg && !svg.getAttribute("viewBox")) {
+          svg.setAttribute("viewBox", "0 0 " + svg.getAttribute("width") + " " + svg.getAttribute("height"));
+        }
+      })
       .catch(err => {
         target.innerHTML = '<p class="chart-error">This chart could not load (' + spec + '). ' +
           'If you opened the file directly, run it from a local web server instead.</p>';

@@ -92,6 +92,8 @@ p { margin: 0; }
 .fig { grid-column: 5 / span 8; margin: 0; min-width: 0; display: grid; gap: 10px; }
 .row.pair .fig { grid-column: span 6; }
 .row.pair .fig:first-child { grid-column: 1 / span 6; }
+.row.full .story { grid-column: 1 / -1; max-width: 70ch; }
+.row.full .fig { grid-column: 1 / -1; }
 .row.pair { align-items: stretch; }
 .row.pair .fig { display: flex; flex-direction: column; gap: 10px; }
 .row.pair .fig figcaption { margin-top: auto; }
@@ -101,9 +103,9 @@ p { margin: 0; }
 .idiom { justify-self: start; font-family: var(--display); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold-deep); background: var(--panel); border: 1px solid var(--rule); border-radius: 999px; padding: 3px 12px; margin-bottom: 6px; }
 .fig-head h3 { font-size: var(--step-1); font-weight: 700; line-height: 1.2; }
 .fig-head p { font-size: 0.93rem; color: var(--muted); line-height: 1.45; }
-.chart { min-width: 0; overflow-x: auto; }
-.chart .vega-embed { width: 100%; display: block; }
-.chart .vega-embed svg { max-width: 100%; height: auto; display: block; }
+.chart { min-width: 0; overflow: hidden; }
+.chart.vega-embed { width: 100%; display: block; }
+.chart svg { max-width: 100% !important; height: auto !important; display: block; }
 .chart-error { font-size: var(--step--1); color: var(--muted); padding: 24px; background: var(--panel); }
 .fig figcaption { font-family: var(--display); font-size: var(--step--1); line-height: 1.5; color: var(--muted); border-top: 1px solid var(--rule); padding-top: 8px; }
 .fig figcaption b { color: var(--ink); font-weight: 600; }
@@ -114,6 +116,8 @@ p { margin: 0; }
 .vega-bind-name { font-weight: 600; margin-right: 4px; }
 .vega-bind label { display: inline-flex; gap: 4px; align-items: center; cursor: pointer; }
 .vega-bind input[type="radio"] { accent-color: var(--stage); margin: 0; }
+.vega-bind input[type="range"] { accent-color: var(--gold-deep); width: min(260px, 60vw); }
+.vega-bind input[type="range"] + span { min-width: 2.6em; font-variant-numeric: tabular-nums; }
 .vega-bind select { font: inherit; padding: 3px 6px; border: 1px solid var(--rule); border-radius: 4px; background: var(--paper); color: var(--ink); }
 #vg-tooltip-element { font-family: var(--display); font-size: 12px; }
 

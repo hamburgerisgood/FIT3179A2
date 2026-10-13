@@ -1,7 +1,7 @@
 {
   "$schema": "https://vega.github.io/schema/vega/v5.json",
   "description": "Beeswarm: every one of the 116 wins as a dot, placed by year and by how remote the winner's hometown is (ABS Remoteness Areas), coloured by award.",
-  "width": 640,
+  "width": 590,
   "height": 330,
   "padding": {"left": 4, "right": 4, "top": 4, "bottom": 4},
   "autosize": "pad",
