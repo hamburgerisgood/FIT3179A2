@@ -166,3 +166,4 @@ footer dd { margin: 0; }
 .vega-bind-radio { display:inline-flex; flex-wrap:wrap; gap:6px 18px; vertical-align:middle; }
 .vega-bind-radio label { display:inline-flex; align-items:center; gap:6px; margin:0; }
 .vega-bind { margin-top:10px; }
+.fig-head strong { color: var(--ink); font-weight: 700; }
