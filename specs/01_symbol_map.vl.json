@@ -1,301 +1,310 @@
 {
-  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-  "description": "Proportional symbol map: hometowns of ARIA winners, circle area = number of wins, colour = ABS remoteness class. Filter by award and by period.",
-  "width": 640,
-  "height": 520,
-  "params": [
-    {
-      "name": "category",
-      "value": "All three awards",
-      "bind": {
-        "input": "radio",
-        "options": [
-          "All three awards",
-          "Album of the Year",
-          "Best Group",
-          "Best Country Album"
-        ],
-        "name": "Show "
-      }
-    },
-    {
-      "name": "period",
-      "value": "all",
-      "bind": {
-        "input": "select",
-        "name": "Years ",
-        "options": [
-          "all",
-          "1987-1999",
-          "2000-2009",
-          "2010-2019",
-          "2020-2025"
-        ],
-        "labels": [
-          "All years (1987–2025)",
-          "1987–1999",
-          "2000–2009",
-          "2010–2019",
-          "2020–2025"
-        ]
-      }
-    }
-  ],
-  "projection": {
-    "type": "conicEqualArea",
-    "parallels": [
-      -18,
-      -36
+ "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+ "description": "Proportional symbol map: hometowns of ARIA winners, circle area = number of wins, colour = ABS remoteness class. Filter by award and by period.",
+ "width": 640,
+ "height": 520,
+ "params": [
+  {
+   "name": "category",
+   "value": "All three awards",
+   "bind": {
+    "input": "radio",
+    "options": [
+     "All three awards",
+     "Album of the Year",
+     "Best Group",
+     "Best Country Album"
     ],
-    "rotate": [
-      -132,
-      0
-    ]
+    "name": "Show "
+   }
   },
-  "layer": [
-    {
-      "data": {
-        "url": "data/au_states.topo.json",
-        "format": {
-          "type": "topojson",
-          "feature": "states"
-        }
-      },
-      "mark": {
-        "type": "geoshape",
-        "fill": "#ebe4d8",
-        "stroke": "#fbf8f3",
-        "strokeWidth": 1.5
-      }
-    },
-    {
-      "data": {
-        "url": "data/aria_wins.csv",
-        "format": {
-          "type": "csv",
-          "parse": {
-            "year": "number",
-            "lat": "number",
-            "lon": "number"
-          }
-        }
-      },
-      "transform": [
-        {
-          "filter": "(category === 'All three awards' || datum.category === category) && (period === 'all' || (datum.year >= toNumber(split(period, '-')[0]) && datum.year <= toNumber(split(period, '-')[1])))"
-        },
-        {
-          "filter": "isValid(datum.lat)"
-        },
-        {
-          "aggregate": [
-            {
-              "op": "count",
-              "as": "wins"
-            },
-            {
-              "op": "distinct",
-              "field": "artist",
-              "as": "artists"
-            }
-          ],
-          "groupby": [
-            "place",
-            "state",
-            "lat",
-            "lon",
-            "remoteness"
-          ]
-        }
-      ],
-      "layer": [
-        {
-          "mark": {
-            "type": "circle",
-            "opacity": 0.85,
-            "stroke": "#fbf8f3",
-            "strokeWidth": 1
-          },
-          "encoding": {
-            "longitude": {
-              "field": "lon",
-              "type": "quantitative"
-            },
-            "latitude": {
-              "field": "lat",
-              "type": "quantitative"
-            },
-            "size": {
-              "field": "wins",
-              "type": "quantitative",
-              "scale": {
-                "domain": [
-                  1,
-                  36
-                ],
-                "range": [
-                  45,
-                  2600
-                ]
-              },
-              "legend": {
-                "title": "Wins",
-                "values": [
-                  1,
-                  5,
-                  15,
-                  35
-                ],
-                "orient": "bottom-left",
-                "direction": "horizontal",
-                "symbolFillColor": "#bdb3a4",
-                "symbolOpacity": 0.8
-              }
-            },
-            "color": {
-              "field": "remoteness",
-              "type": "nominal",
-              "title": "Hometown is a…",
-              "scale": {
-                "domain": [
-                  "Major city",
-                  "Inner regional",
-                  "Outer regional",
-                  "Remote",
-                  "Very remote"
-                ],
-                "range": [
-                  "#3b3f73",
-                  "#4f9d8a",
-                  "#d8a031",
-                  "#c4552d",
-                  "#7a2a1a"
-                ]
-              },
-              "legend": {
-                "orient": "top-right",
-                "symbolType": "circle",
-                "offset": 4
-              }
-            },
-            "order": {
-              "field": "wins",
-              "sort": "descending"
-            },
-            "tooltip": [
-              {
-                "field": "place",
-                "title": "Hometown"
-              },
-              {
-                "field": "state",
-                "title": "State"
-              },
-              {
-                "field": "remoteness",
-                "title": "ABS remoteness"
-              },
-              {
-                "field": "wins",
-                "title": "ARIA wins"
-              },
-              {
-                "field": "artists",
-                "title": "Different artists"
-              }
-            ]
-          }
-        },
-        {
-          "transform": [
-            {
-              "filter": "datum.wins >= 4 || datum.place === 'Kerang' || period !== 'all'"
-            },
-            {
-              "calculate": "datum.place + ' ' + datum.wins",
-              "as": "label"
-            },
-            {
-              "calculate": "datum.lat + (datum.place === 'Newcastle' ? 0.9 : datum.place === 'Sydney' ? -1.3 : datum.place === 'Canberra' ? -2 : 0)",
-              "as": "label_lat"
-            }
-          ],
-          "mark": {
-            "type": "text",
-            "align": "left",
-            "dx": 9,
-            "dy": -9,
-            "fontSize": 11,
-            "fontWeight": 600,
-            "color": "#1f1c18"
-          },
-          "encoding": {
-            "longitude": {
-              "field": "lon",
-              "type": "quantitative"
-            },
-            "latitude": {
-              "field": "label_lat",
-              "type": "quantitative"
-            },
-            "text": {
-              "field": "label",
-              "type": "nominal"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "data": {
-        "values": [
-          {
-            "lon": 127.2,
-            "lat": -14.6,
-            "text": "Baker Boy, Milingimbi — the most remote",
-            "text2": "hometown of any winner here (2022)",
-            "showFor": "Album of the Year"
-          },
-          {
-            "lon": 124.5,
-            "lat": -36.2,
-            "text": "Country music brings in small towns:",
-            "text2": "Kerang, Corryong, Wemen, Southend",
-            "showFor": "Best Country Album"
-          }
-        ]
-      },
-      "mark": {
-        "type": "text",
-        "align": "left",
-        "fontSize": 10.5,
-        "fontStyle": "italic",
-        "color": "#6b6157",
-        "lineHeight": 14
-      },
-      "encoding": {
-        "longitude": {
-          "field": "lon",
-          "type": "quantitative"
-        },
-        "latitude": {
-          "field": "lat",
-          "type": "quantitative"
-        },
-        "text": {
-          "field": "lines",
-          "type": "nominal"
-        }
-      },
-      "transform": [
-        {
-          "filter": "(category === 'All three awards' || category === datum.showFor) && (datum.showFor !== 'Album of the Year' || period === 'all' || toNumber(split(period, '-')[1]) >= 2022)"
-        },
-        {
-          "calculate": "[datum.text, datum.text2]",
-          "as": "lines"
-        }
-      ]
-    }
+  {
+   "name": "upTo",
+   "value": 2025,
+   "bind": {
+    "input": "range",
+    "min": 1987,
+    "max": 2025,
+    "step": 1,
+    "name": "Year "
+   }
+  },
+  {
+   "name": "windowYears",
+   "value": "all",
+   "bind": {
+    "input": "select",
+    "name": "Window ",
+    "options": [
+     "all",
+     "1",
+     "5",
+     "10"
+    ],
+    "labels": [
+     "Everything up to that year",
+     "That year only",
+     "The 5 years up to it",
+     "The 10 years up to it"
+    ]
+   }
+  }
+ ],
+ "projection": {
+  "type": "conicEqualArea",
+  "parallels": [
+   -18,
+   -36
+  ],
+  "rotate": [
+   -132,
+   0
   ]
+ },
+ "layer": [
+  {
+   "data": {
+    "url": "data/au_states.topo.json",
+    "format": {
+     "type": "topojson",
+     "feature": "states"
+    }
+   },
+   "mark": {
+    "type": "geoshape",
+    "fill": "#ebe4d8",
+    "stroke": "#fbf8f3",
+    "strokeWidth": 1.5
+   }
+  },
+  {
+   "data": {
+    "url": "data/aria_wins.csv",
+    "format": {
+     "type": "csv",
+     "parse": {
+      "year": "number",
+      "lat": "number",
+      "lon": "number"
+     }
+    }
+   },
+   "transform": [
+    {
+     "filter": "(category === 'All three awards' || datum.category === category) && (datum.year <= upTo && datum.year > upTo - (windowYears === 'all' ? 100 : toNumber(windowYears)))"
+    },
+    {
+     "filter": "isValid(datum.lat)"
+    },
+    {
+     "aggregate": [
+      {
+       "op": "count",
+       "as": "wins"
+      },
+      {
+       "op": "distinct",
+       "field": "artist",
+       "as": "artists"
+      }
+     ],
+     "groupby": [
+      "place",
+      "state",
+      "lat",
+      "lon",
+      "remoteness"
+     ]
+    }
+   ],
+   "layer": [
+    {
+     "mark": {
+      "type": "circle",
+      "opacity": 0.85,
+      "stroke": "#fbf8f3",
+      "strokeWidth": 1
+     },
+     "encoding": {
+      "longitude": {
+       "field": "lon",
+       "type": "quantitative"
+      },
+      "latitude": {
+       "field": "lat",
+       "type": "quantitative"
+      },
+      "size": {
+       "field": "wins",
+       "type": "quantitative",
+       "scale": {
+        "domain": [
+         1,
+         36
+        ],
+        "range": [
+         45,
+         2600
+        ]
+       },
+       "legend": {
+        "title": "Wins",
+        "values": [
+         1,
+         5,
+         15,
+         35
+        ],
+        "orient": "bottom-left",
+        "direction": "horizontal",
+        "symbolFillColor": "#bdb3a4",
+        "symbolOpacity": 0.8
+       }
+      },
+      "color": {
+       "field": "remoteness",
+       "type": "nominal",
+       "title": "Hometown is a…",
+       "scale": {
+        "domain": [
+         "Major city",
+         "Inner regional",
+         "Outer regional",
+         "Remote",
+         "Very remote"
+        ],
+        "range": [
+         "#3b3f73",
+         "#4f9d8a",
+         "#d8a031",
+         "#c4552d",
+         "#7a2a1a"
+        ]
+       },
+       "legend": {
+        "orient": "top-right",
+        "symbolType": "circle",
+        "offset": 4
+       }
+      },
+      "order": {
+       "field": "wins",
+       "sort": "descending"
+      },
+      "tooltip": [
+       {
+        "field": "place",
+        "title": "Hometown"
+       },
+       {
+        "field": "state",
+        "title": "State"
+       },
+       {
+        "field": "remoteness",
+        "title": "ABS remoteness"
+       },
+       {
+        "field": "wins",
+        "title": "ARIA wins"
+       },
+       {
+        "field": "artists",
+        "title": "Different artists"
+       }
+      ]
+     }
+    },
+    {
+     "transform": [
+      {
+       "filter": "datum.wins >= 4 || datum.place === 'Kerang' || windowYears !== 'all'"
+      },
+      {
+       "calculate": "datum.place + ' ' + datum.wins",
+       "as": "label"
+      },
+      {
+       "calculate": "datum.lat + (datum.place === 'Newcastle' ? 0.9 : datum.place === 'Sydney' ? -1.3 : datum.place === 'Canberra' ? -2 : 0)",
+       "as": "label_lat"
+      }
+     ],
+     "mark": {
+      "type": "text",
+      "align": "left",
+      "dx": 9,
+      "dy": -9,
+      "fontSize": 11,
+      "fontWeight": 600,
+      "color": "#1f1c18"
+     },
+     "encoding": {
+      "longitude": {
+       "field": "lon",
+       "type": "quantitative"
+      },
+      "latitude": {
+       "field": "label_lat",
+       "type": "quantitative"
+      },
+      "text": {
+       "field": "label",
+       "type": "nominal"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "data": {
+    "values": [
+     {
+      "lon": 127.2,
+      "lat": -14.6,
+      "text": "Baker Boy, Milingimbi — the most remote",
+      "text2": "hometown of any winner here (2022)",
+      "showFor": "Album of the Year"
+     },
+     {
+      "lon": 124.5,
+      "lat": -36.2,
+      "text": "Country music brings in small towns:",
+      "text2": "Kerang, Corryong, Wemen, Southend",
+      "showFor": "Best Country Album"
+     }
+    ]
+   },
+   "mark": {
+    "type": "text",
+    "align": "left",
+    "fontSize": 10.5,
+    "fontStyle": "italic",
+    "color": "#6b6157",
+    "lineHeight": 14
+   },
+   "encoding": {
+    "longitude": {
+     "field": "lon",
+     "type": "quantitative"
+    },
+    "latitude": {
+     "field": "lat",
+     "type": "quantitative"
+    },
+    "text": {
+     "field": "lines",
+     "type": "nominal"
+    }
+   },
+   "transform": [
+    {
+     "filter": "(category === 'All three awards' || category === datum.showFor) && (datum.showFor !== 'Album of the Year' || (upTo >= 2022 && (windowYears === 'all' || upTo - toNumber(windowYears) < 2022)))"
+    },
+    {
+     "calculate": "[datum.text, datum.text2]",
+     "as": "lines"
+    }
+   ]
+  }
+ ]
 }
