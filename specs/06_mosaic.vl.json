@@ -95,7 +95,7 @@
       "sort": [
         {
           "field": "cat_order",
-          "order": "ascending" //ascending order
+          "order": "ascending"
         }
       ]
     },
