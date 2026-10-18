@@ -1,0 +1,173 @@
+// 图 11：矩形树图 (treemap) — Vega
+// 每位艺人一个矩形，面积 = 获奖数，按州分组。
+// 关键点：nest 先把数据变成 州→艺人 的树，treemap transform 自动算出每个矩形位置 x0,y0,x1,y1；depth 1 是州、depth 2 是艺人。
+// 面试一句话：I nest wins by state then artist and let Vega's squarified treemap compute the rectangles.
+{
+  "$schema": "https://vega.github.io/schema/vega/v5.json",  // › 声明这是 Vega-Lite / Vega 的哪个版本，编辑器据此做提示
+  "description": "Treemap: every winning artist as a rectangle sized by their number of wins, grouped by home state.",  // › 这张图的文字说明（给读屏软件和读代码的人看，不影响画面）
+  "width": 640,  // › 宽度（像素）；"container" 表示撑满容器
+  "height": 360,  // › 高度（像素）
+  "padding": 2,  // › 图四周留白，给标签/标题留空间
+  "autosize": "none",  // › 尺寸如何适应容器
+  "data": [  // › 数据来源。url 指向 data/ 里的文件，或用 values 直接内嵌
+    {
+      "name": "totals",  // › 命名为 "totals"，别处用这个名字引用
+      "url": "data/aria_wins.csv",  // › 读取文件 data/aria_wins.csv
+      "format": {"type": "csv"},  // › 数字/日期的显示格式（d3-format，例如 d=整数，.0% 百分比）
+      "transform": [  // › 数据变换管道：按顺序一步一步加工数据，上一步的输出是下一步的输入
+        {"type": "filter", "expr": "datum.state !== 'Unknown'"},  // › 类型
+        {"type": "aggregate", "groupby": ["state"], "ops": ["count"], "as": ["total"]}  // › 类型
+      ]
+    },
+    {
+      "name": "tree",  // › 命名为 "tree"，别处用这个名字引用
+      "url": "data/aria_wins.csv",  // › 读取文件 data/aria_wins.csv
+      "format": {"type": "csv"},  // › 数字/日期的显示格式（d3-format，例如 d=整数，.0% 百分比）
+      "transform": [  // › 数据变换管道：按顺序一步一步加工数据，上一步的输出是下一步的输入
+        {"type": "filter", "expr": "datum.state !== 'Unknown'"},  // › 类型
+        {"type": "aggregate", "groupby": ["state", "artist"], "ops": ["count"], "as": ["wins"]},  // › 类型
+        {"type": "nest", "keys": ["state"], "generate": true},  // › 类型
+        {
+          "type": "treemap",  // › 矩形树图布局，自动算出每个矩形的位置
+          "field": "wins",  // › 使用数据里的 “wins” 这一列
+          "sort": {"field": "value", "order": "descending"},  // › 排序方式：按哪个字段、升序还是降序
+          "round": true,  // › 矩形边界取整到像素
+          "method": "squarify",  // › 算法（squarify 让矩形接近正方形）
+          "ratio": 1.4,  // › 目标长宽比
+          "paddingInner": 2,  // › 相邻类别之间的间隙比例/像素
+          "paddingTop": 18,  // › 每个节点顶部留的像素（给标签用）
+          "size": [{"signal": "width"}, {"signal": "height + 18"}]  // › 大小
+        }
+      ]
+    },
+    {
+      "name": "states",  // › 命名为 "states"，别处用这个名字引用
+      "source": "tree",  // › 从前面某个已命名的数据集继续（不再重新读文件）
+      "transform": [  // › 数据变换管道：按顺序一步一步加工数据，上一步的输出是下一步的输入
+        {"type": "filter", "expr": "datum.depth === 1"},  // › 类型
+        {"type": "lookup", "from": "totals", "key": "state", "fields": ["key"], "values": ["total"]}  // › 类型
+      ]
+    },
+    {
+      "name": "artists",  // › 命名为 "artists"，别处用这个名字引用
+      "source": "tree",  // › 从前面某个已命名的数据集继续（不再重新读文件）
+      "transform": [{"type": "filter", "expr": "datum.depth === 2"}]  // › 数据变换管道：按顺序一步一步加工数据，上一步的输出是下一步的输入
+    }
+  ],
+  "scales": [  // › Vega 的比例尺列表
+    {
+      "name": "colour",  // › 命名为 "colour"，别处用这个名字引用
+      "type": "ordinal",  // › 数据类型：有序类别
+      "domain": ["NSW", "VIC", "QLD", "WA", "SA", "TAS", "ACT", "NT"],  // › 数据的取值范围（输入）
+      "range": [  // › 映射到的输出范围（像素、颜色列表 …）
+        "#0072B2",
+        "#CC79A7",
+        "#D55E00",
+        "#E69F00",
+        "#009E73",
+        "#56B4E9",
+        "#8c7b6b",
+        "#7a3b14"
+      ]
+    }
+  ],
+  "marks": [  // › Vega 里的图形列表（按顺序从下到上画）
+    {
+      "type": "group",  // › Vega：一组嵌套的图形
+      "encode": {  // › Vega 的 mark 样式：enter（创建时）、update（更新时）、hover（悬停时）
+        "enter": {  // › 元素创建时设置的属性（只算一次）
+          "x": {"value": 0},  // › x 方向的位置
+          "y": {"value": -18},  // › y 方向的位置
+          "width": {"signal": "width"},  // › 宽度（像素）；"container" 表示撑满容器
+          "height": {"signal": "height + 18"}  // › 高度（像素）
+        }
+      },
+      "marks": [  // › Vega 里的图形列表（按顺序从下到上画）
+        {
+          "type": "rect",  // › 画矩形（热力图/方块图）
+          "from": {"data": "states"},  // › 这个 mark/数据 的数据来源
+          "encode": {  // › Vega 的 mark 样式：enter（创建时）、update（更新时）、hover（悬停时）
+            "enter": {  // › 元素创建时设置的属性（只算一次）
+              "x": {"field": "x0"},  // › x 方向的位置
+              "y": {"field": "y0"},  // › y 方向的位置
+              "x2": {"field": "x1"},  // › 区间图形的另一端（x 方向终点）
+              "y2": {"field": "y1"},  // › 区间图形的另一端（y 方向终点）
+              "fill": {"value": "#efe8dc"}  // › 填充色
+            }
+          }
+        },
+        {
+          "type": "text",  // › 画文字
+          "from": {"data": "states"},  // › 这个 mark/数据 的数据来源
+          "encode": {  // › Vega 的 mark 样式：enter（创建时）、update（更新时）、hover（悬停时）
+            "enter": {  // › 元素创建时设置的属性（只算一次）
+              "x": {"signal": "datum.x0 + 4"},  // › x 方向的位置
+              "y": {"signal": "datum.y0 + 13"},  // › y 方向的位置
+              "text": {  // › 要显示的文字（来自字段或固定值）
+                "signal": "datum.x1 - datum.x0 > 50 ? datum.key + ' · ' + datum.total : datum.key"  // › 矩形宽 > 50 像素就写“州名 · 总数”，窄了只写州名
+              },
+              "fontSize": {"value": 11.5},  // › 字号
+              "fontWeight": {"value": 700},  // › 字重（400 常规，700 粗体）
+              "fill": {"value": "#1f1c18"},  // › 填充色
+              "limit": {"signal": "datum.x1 - datum.x0 - 4"}  // › 文字最长多少像素，超出截断
+            }
+          }
+        },
+        {
+          "type": "rect",  // › 画矩形（热力图/方块图）
+          "from": {"data": "artists"},  // › 这个 mark/数据 的数据来源
+          "encode": {  // › Vega 的 mark 样式：enter（创建时）、update（更新时）、hover（悬停时）
+            "enter": {  // › 元素创建时设置的属性（只算一次）
+              "x": {"field": "x0"},  // › x 方向的位置
+              "y": {"field": "y0"},  // › y 方向的位置
+              "x2": {"field": "x1"},  // › 区间图形的另一端（x 方向终点）
+              "y2": {"field": "y1"},  // › 区间图形的另一端（y 方向终点）
+              "fill": {"scale": "colour", "field": "state"},  // › 填充色
+              "fillOpacity": {"signal": "0.55 + 0.45 * min(1, datum.wins / 6)"},  // › 填充的透明度
+              "tooltip": {  // › 鼠标悬停时显示的信息
+                "signal": "{'title': datum.artist, 'Home state': datum.state, 'Wins (these three awards)': datum.wins}"  // › 悬停提示：对象的键是标题，值是内容；'title' 是特殊键，显示成粗体标题
+              }
+            },
+            "update": {"stroke": {"value": "#fbf8f3"}, "strokeWidth": {"value": 0}},  // › 每次更新都会重新计算的属性
+            "hover": {"stroke": {"value": "#1f1c18"}, "strokeWidth": {"value": 2}}  // › 鼠标悬停时的样式
+          }
+        },
+        {
+          "type": "text",  // › 画文字
+          "from": {"data": "artists"},  // › 这个 mark/数据 的数据来源
+          "interactive": false,  // › false 表示不响应鼠标，让事件穿透到下面的图形
+          "encode": {  // › Vega 的 mark 样式：enter（创建时）、update（更新时）、hover（悬停时）
+            "enter": {  // › 元素创建时设置的属性（只算一次）
+              "x": {"signal": "datum.x0 + 4"},  // › x 方向的位置
+              "y": {"signal": "datum.y0 + 12"},  // › y 方向的位置
+              "text": {  // › 要显示的文字（来自字段或固定值）
+                "signal": "(datum.x1 - datum.x0) > 34 && (datum.y1 - datum.y0) > 16 ? datum.artist : ''"  // › 矩形宽 > 34、高 > 16 才写艺人名，否则空（防止字挤出来）
+              },
+              "limit": {"signal": "datum.x1 - datum.x0 - 6"},  // › 文字最长多少像素，超出截断
+              "fontSize": {"signal": "datum.wins >= 5 ? 11.5 : 9.5"},  // › 字号
+              "fontWeight": {"signal": "datum.wins >= 5 ? 700 : 500"},  // › 字重（400 常规，700 粗体）
+              "fill": {"value": "#fffaf0"}  // › 填充色
+            }
+          }
+        },
+        {
+          "type": "text",  // › 画文字
+          "from": {"data": "artists"},  // › 这个 mark/数据 的数据来源
+          "interactive": false,  // › false 表示不响应鼠标，让事件穿透到下面的图形
+          "encode": {  // › Vega 的 mark 样式：enter（创建时）、update（更新时）、hover（悬停时）
+            "enter": {  // › 元素创建时设置的属性（只算一次）
+              "x": {"signal": "datum.x0 + 4"},  // › x 方向的位置
+              "y": {"signal": "datum.y0 + 25"},  // › y 方向的位置
+              "text": {  // › 要显示的文字（来自字段或固定值）
+                "signal": "(datum.x1 - datum.x0) > 30 && (datum.y1 - datum.y0) > 30 ? datum.wins + (datum.wins === 1 ? ' win' : ' wins') : ''"  // › 矩形够大（>30×30）才写“N win(s)”，否则空
+              },
+              "fontSize": {"value": 9.5},  // › 字号
+              "fill": {"value": "#fffaf0"},  // › 填充色
+              "fillOpacity": {"value": 0.9}  // › 填充的透明度
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

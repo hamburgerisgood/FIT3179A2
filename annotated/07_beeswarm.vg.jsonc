@@ -1,0 +1,144 @@
+// 图 7：蜂群图 (beeswarm) — Vega
+// 每个获奖一个点：x = 年份，y = 获奖者家乡的偏远程度（ABS Remoteness）；颜色 = 奖项。
+// 关键点：force 模拟，x 力把点拉回对应年份，y 力拉向对应行，collide 防止重叠。
+// 面试一句话：Each dot is one win; the force simulation keeps dots at their year without overlapping.
+{
+  "$schema": "https://vega.github.io/schema/vega/v5.json",  // › 声明这是 Vega-Lite / Vega 的哪个版本，编辑器据此做提示
+  "description": "Beeswarm: every one of the 116 wins as a dot, placed by year and by how remote the winner's hometown is (ABS Remoteness Areas), coloured by award.",  // › 这张图的文字说明（给读屏软件和读代码的人看，不影响画面）
+  "width": 590,  // › 宽度（像素）；"container" 表示撑满容器
+  "height": 330,  // › 高度（像素）
+  "padding": {"left": 4, "right": 4, "top": 4, "bottom": 4},  // › 图四周留白，给标签/标题留空间
+  "autosize": "pad",  // › 尺寸如何适应容器
+  "data": [  // › 数据来源。url 指向 data/ 里的文件，或用 values 直接内嵌
+    {
+      "name": "wins",  // › 命名为 "wins"，别处用这个名字引用
+      "url": "data/aria_wins.csv",  // › 读取文件 data/aria_wins.csv
+      "format": {"type": "csv", "parse": {"year": "number"}},  // › 数字/日期的显示格式（d3-format，例如 d=整数，.0% 百分比）
+      "transform": [  // › 数据变换管道：按顺序一步一步加工数据，上一步的输出是下一步的输入
+        {"type": "formula", "as": "fx", "expr": "scale('x', datum.year)"},  // › 类型
+        {
+          "type": "formula",  // › 用表达式算出新字段
+          "as": "row",  // › 计算结果存为新字段 "row"
+          "expr": "datum.remoteness === 'Unknown' ? 'Not recorded' : datum.remoteness"  // › 把 Unknown 改名为 Not recorded，其余不变
+        },
+        {"type": "formula", "as": "fy", "expr": "scale('y', datum.row) + bandwidth('y') / 2"}  // › 类型
+      ]
+    },
+    {
+      "name": "notes",  // › 命名为 "notes"，别处用这个名字引用
+      "values": [  // › 手动指定显示哪些值（刻度/图例项），或内嵌数据行
+        {
+          "year": 2002.5,
+          "row": "Inner regional",  // › 每个值一行（垂直排列的小图）
+          "text": "Outside the big cities, nearly every dot is green: country music",  // › 要显示的文字（来自字段或固定值）
+          "dy": 0  // › 文字垂直偏移（像素）
+        },
+        {"year": 1990, "row": "Remote", "text": "Ian Moss, Alice Springs (1990)", "dy": 0},
+        {"year": 2022, "row": "Very remote", "text": "Baker Boy, Milingimbi (2022)", "dy": 0}
+      ]
+    }
+  ],
+  "scales": [  // › Vega 的比例尺列表
+    {"name": "x", "type": "linear", "domain": [1986, 2026], "range": "width", "zero": false},  // › 命名为 "x", "type": "linear", "domain": [1986, 2026], "range": "width", "zero": false}，别处用这个名字引用
+    {
+      "name": "y",  // › 命名为 "y"，别处用这个名字引用
+      "type": "band",  // › 带状比例尺（给类别分配等宽的格子）
+      "domain": [  // › 数据的取值范围（输入）
+        "Major city",
+        "Inner regional",
+        "Outer regional",
+        "Remote",
+        "Very remote",
+        "Not recorded"
+      ],
+      "range": "height",  // › 映射到的输出范围（像素、颜色列表 …）
+      "paddingInner": 0.05  // › 相邻类别之间的间隙比例/像素
+    },
+    {
+      "name": "colour",  // › 命名为 "colour"，别处用这个名字引用
+      "type": "ordinal",  // › 数据类型：有序类别
+      "domain": ["Album of the Year", "Best Group", "Best Country Album"],  // › 数据的取值范围（输入）
+      "range": ["#c9971f", "#4a4e8c", "#6f8f3d"]  // › 映射到的输出范围（像素、颜色列表 …）
+    }
+  ],
+  "axes": [  // › Vega 的坐标轴列表
+    {
+      "orient": "bottom",  // › 放在图的哪一边（top/bottom/left/right）
+      "scale": "x",  // › 比例尺：数据值如何映射到像素/颜色
+      "format": "d",  // › 数字/日期的显示格式（d3-format，例如 d=整数，.0% 百分比）
+      "values": [1987, 1995, 2000, 2005, 2010, 2015, 2020, 2025],  // › 手动指定显示哪些值（刻度/图例项），或内嵌数据行
+      "grid": true,  // › 是否画网格线
+      "gridColor": "#efe9df",  // › 网格线颜色
+      "domain": false,  // › 数据的取值范围（输入）
+      "ticks": false  // › 是否画刻度线
+    },
+    {
+      "orient": "left",  // › 放在图的哪一边（top/bottom/left/right）
+      "scale": "y",  // › 比例尺：数据值如何映射到像素/颜色
+      "domain": false,  // › 数据的取值范围（输入）
+      "ticks": false,  // › 是否画刻度线
+      "labelFontWeight": 600,  // › 标签的粗细
+      "labelFontSize": 11.5,  // › 坐标轴/图例标签的字号
+      "labelColor": "#1f1c18",  // › 标签的颜色
+      "labelLimit": 140  // › 标签最长多少像素，超出会被截断
+    }
+  ],
+  "legends": [  // › Vega 的图例列表
+    {
+      "fill": "colour",  // › 填充色
+      "orient": "top",  // › 放在图的哪一边（top/bottom/left/right）
+      "direction": "horizontal",  // › 图例排列方向（horizontal/vertical）
+      "symbolType": "circle",  // › 图例符号形状
+      "title": null,  // › 不显示标题
+      "columnPadding": 14  // › 图例各列之间的间距
+    }
+  ],
+  "marks": [  // › Vega 里的图形列表（按顺序从下到上画）
+    {
+      "name": "dots",  // › 命名为 "dots"，别处用这个名字引用
+      "type": "symbol",  // › 画符号（Vega：点/圆）
+      "from": {"data": "wins"},  // › 这个 mark/数据 的数据来源
+      "encode": {  // › Vega 的 mark 样式：enter（创建时）、update（更新时）、hover（悬停时）
+        "enter": {  // › 元素创建时设置的属性（只算一次）
+          "size": {"value": 90},  // › 大小
+          "fill": {"scale": "colour", "field": "category"},  // › 填充色
+          "stroke": {"value": "#fbf8f3"},  // › 边线颜色
+          "strokeWidth": {"value": 1},  // › 边线粗细（像素）
+          "tooltip": {  // › 鼠标悬停时显示的信息
+            "signal": "{'title': datum.winner, 'Award': datum.category + ' ' + datum.year, 'For': datum.work, 'Hometown': datum.place ? datum.place + ', ' + datum.state : 'not recorded', 'ABS remoteness': datum.remoteness}"  // › 悬停提示：获奖者、奖项+年份、作品、家乡、偏远程度
+          }
+        },
+        "update": {"x": {"field": "x"}, "y": {"field": "y"}}  // › 每次更新都会重新计算的属性
+      },
+      "transform": [  // › 数据变换管道：按顺序一步一步加工数据，上一步的输出是下一步的输入
+        {
+          "type": "force",  // › 力导向布局
+          "static": true,  // › true = 一次算完，不做动画
+          "iterations": 300,  // › 模拟迭代次数，越多越稳定
+          "forces": [  // › 力的列表，一起作用
+            {"force": "collide", "radius": 6, "iterations": 2},  // › 力导向模拟：碰撞、拉向目标位置，用来避免圆圈重叠
+            {"force": "x", "x": "datum.fx", "strength": 0.9},  // › 力导向模拟：碰撞、拉向目标位置，用来避免圆圈重叠
+            {"force": "y", "y": "datum.fy", "strength": 0.12}  // › 力导向模拟：碰撞、拉向目标位置，用来避免圆圈重叠
+          ]
+        }
+      ]
+    },
+    {
+      "type": "text",  // › 画文字
+      "from": {"data": "notes"},  // › 这个 mark/数据 的数据来源
+      "encode": {  // › Vega 的 mark 样式：enter（创建时）、update（更新时）、hover（悬停时）
+        "enter": {  // › 元素创建时设置的属性（只算一次）
+          "x": {"scale": "x", "field": "year"},  // › x 方向的位置
+          "y": {"signal": "scale('y', datum.row) + bandwidth('y') / 2 - 13"},  // › y 方向的位置
+          "align": {"signal": "datum.year > 2015 ? 'right' : 'left'"},  // › 文字水平对齐
+          "dx": {"signal": "datum.year > 2015 ? 4 : -4"},  // › 文字水平偏移（像素）
+          "baseline": {"value": "middle"},  // › 文字垂直对齐
+          "text": {"field": "text"},  // › 要显示的文字（来自字段或固定值）
+          "fontSize": {"value": 10.5},  // › 字号
+          "fontStyle": {"value": "italic"},  // › 字体样式（italic 斜体）
+          "fill": {"value": "#5f574d"}  // › 填充色
+        }
+      }
+    }
+  ]
+}

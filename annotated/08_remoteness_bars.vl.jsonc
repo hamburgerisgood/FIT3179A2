@@ -1,0 +1,208 @@
+// 图 8：三联柱状图 (three-panel bars) — Vega-Lite
+// 三个并排的面板比较：人口占比、获奖占比，以及两者的差距（按偏远程度）。
+// 关键点：hconcat 并排；三张图共用同一个 y 轴顺序；用 calculate 把数据整理成可比较的占比。
+// 面试一句话：Three aligned panels let you compare population share against win share for each remoteness class.
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",  // › 声明这是 Vega-Lite / Vega 的哪个版本，编辑器据此做提示
+  "description": "Three aligned bar charts: where Australians live (ABS/AIHW, June 2023) compared with where ARIA winners come from, by ABS Remoteness Area.",  // › 这张图的文字说明（给读屏软件和读代码的人看，不影响画面）
+  "spacing": 26,  // › 分面各小图的间距；负数让它们重叠（山脊图用）
+  "hconcat": [  // › 水平并排放多个子图
+    {
+      "title": {"text": "Where Australians live", "subtitle": "ABS, 30 June 2023"},  // › 标题文字；null 表示不要标题
+      "width": 160,  // › 宽度（像素）；"container" 表示撑满容器
+      "height": 150,  // › 高度（像素）
+      "data": {  // › 数据来源。url 指向 data/ 里的文件，或用 values 直接内嵌
+        "url": "data/source/abs_remoteness_2023.csv",  // › 读取文件 data/source/abs_remoteness_2023.csv
+        "format": {"type": "csv", "parse": {"population_share_pct": "number"}}  // › 数字/日期的显示格式（d3-format，例如 d=整数，.0% 百分比）
+      },
+      "transform": [{"calculate": "datum.population_share_pct / 100", "as": "share"}],  // › 数据变换管道：按顺序一步一步加工数据，上一步的输出是下一步的输入
+      "layer": [  // › 图层：多个图叠在同一个坐标系里，后写的在上面
+        {
+          "mark": {"type": "bar", "color": "#9b9083", "cornerRadiusEnd": 2},  // › 用什么图形来画（bar 柱 / point 点 / rect 方块 / area 面积 / text 文字 / geoshape 地图形状 …）
+          "encoding": {  // › 把数据字段映射到视觉通道（x、y、颜色、大小 …）
+            "y": {  // › y 方向的位置
+              "field": "remoteness",  // › 使用数据里的 “remoteness” 这一列
+              "type": "nominal",  // › 数据类型：名义（类别，没有顺序）
+              "sort": ["Major city", "Inner regional", "Outer regional", "Remote", "Very remote"],  // › 排序：["Major city", "Inner regional", "Outer regional", "Remote", "Very remote"]
+              "title": null,  // › 不显示标题
+              "axis": {  // › 坐标轴的外观；null 表示不显示坐标轴
+                "labelFontSize": 11,  // › 坐标轴/图例标签的字号
+                "labelColor": "#1f1c18",  // › 标签的颜色
+                "domain": false,  // › 数据的取值范围（输入）
+                "ticks": false  // › 是否画刻度线
+              }
+            },
+            "x": {  // › x 方向的位置
+              "field": "share",  // › 使用数据里的 “share” 这一列
+              "type": "quantitative",  // › 数据类型：定量（数字，连续）
+              "scale": {"domain": [0, 1]},  // › 比例尺：数据值如何映射到像素/颜色
+              "axis": null  // › 不显示坐标轴
+            },
+            "tooltip": [  // › 鼠标悬停时显示的信息
+              {"field": "remoteness", "title": "Area"},  // › 使用数据里的 “remoteness", "title": "Area"}” 这一列
+              {"field": "population_share_pct", "title": "% of Australians"}  // › 使用数据里的 “population_share_pct", "title": "% of Australians"}” 这一列
+            ]
+          }
+        },
+        {
+          "mark": {"type": "text", "align": "left", "dx": 4, "fontSize": 10.5, "color": "#3e3832"},  // › 用什么图形来画（bar 柱 / point 点 / rect 方块 / area 面积 / text 文字 / geoshape 地图形状 …）
+          "encoding": {  // › 把数据字段映射到视觉通道（x、y、颜色、大小 …）
+            "y": {  // › y 方向的位置
+              "field": "remoteness",  // › 使用数据里的 “remoteness” 这一列
+              "type": "nominal",  // › 数据类型：名义（类别，没有顺序）
+              "sort": ["Major city", "Inner regional", "Outer regional", "Remote", "Very remote"]  // › 排序：["Major city", "Inner regional", "Outer regional", "Remote", "Very remote"]
+            },
+            "x": {"field": "share", "type": "quantitative"},  // › x 方向的位置
+            "text": {"field": "share", "format": ".1~%"}  // › 要显示的文字（来自字段或固定值）
+          }
+        }
+      ]
+    },
+    {
+      "title": {  // › 标题文字；null 表示不要标题
+        "text": "Album of the Year + Best Group",  // › 要显示的文字（来自字段或固定值）
+        "subtitle": "77 wins, all hometowns recorded"  // › 副标题
+      },
+      "width": 160,  // › 宽度（像素）；"container" 表示撑满容器
+      "height": 150,  // › 高度（像素）
+      "data": {"url": "data/aria_wins.csv"},  // › 数据来源。url 指向 data/ 里的文件，或用 values 直接内嵌
+      "transform": [  // › 数据变换管道：按顺序一步一步加工数据，上一步的输出是下一步的输入
+        {"filter": "datum.category !== 'Best Country Album' && datum.remoteness !== 'Unknown'"},  // › 只要不是乡村专辑奖、且偏远程度已知的行
+        {"aggregate": [{"op": "count", "as": "n"}], "groupby": ["remoteness"]},  // › 聚合：把多行合并成一行（count 数量 / sum 求和 / max 最大 …）
+        {"joinaggregate": [{"op": "sum", "field": "n", "as": "total"}]},  // › 聚合，但结果写回每一行，不会减少行数（用来给每行加“总数”之类）
+        {"calculate": "datum.n / datum.total", "as": "share"}  // › 新字段：占比 = 该组数量 ÷ 总数
+      ],
+      "layer": [  // › 图层：多个图叠在同一个坐标系里，后写的在上面
+        {
+          "mark": {"type": "bar", "color": "#4a4e8c", "cornerRadiusEnd": 2},  // › 用什么图形来画（bar 柱 / point 点 / rect 方块 / area 面积 / text 文字 / geoshape 地图形状 …）
+          "encoding": {  // › 把数据字段映射到视觉通道（x、y、颜色、大小 …）
+            "y": {  // › y 方向的位置
+              "field": "remoteness",  // › 使用数据里的 “remoteness” 这一列
+              "type": "nominal",  // › 数据类型：名义（类别，没有顺序）
+              "scale": {  // › 比例尺：数据值如何映射到像素/颜色
+                "domain": [  // › 数据的取值范围（输入）
+                  "Major city",
+                  "Inner regional",
+                  "Outer regional",
+                  "Remote",
+                  "Very remote"
+                ]
+              },
+              "axis": null  // › 不显示坐标轴
+            },
+            "x": {  // › x 方向的位置
+              "field": "share",  // › 使用数据里的 “share” 这一列
+              "type": "quantitative",  // › 数据类型：定量（数字，连续）
+              "scale": {"domain": [0, 1]},  // › 比例尺：数据值如何映射到像素/颜色
+              "axis": null  // › 不显示坐标轴
+            },
+            "tooltip": [  // › 鼠标悬停时显示的信息
+              {"field": "remoteness", "title": "Area"},  // › 使用数据里的 “remoteness", "title": "Area"}” 这一列
+              {"field": "n", "title": "Wins"},  // › 使用数据里的 “n", "title": "Wins"}” 这一列
+              {"field": "share", "title": "Share", "format": ".0%"}  // › 使用数据里的 “share", "title": "Share", "format": ".0%"}” 这一列
+            ]
+          }
+        },
+        {
+          "mark": {"type": "text", "align": "left", "dx": 4, "fontSize": 10.5, "color": "#3e3832"},  // › 用什么图形来画（bar 柱 / point 点 / rect 方块 / area 面积 / text 文字 / geoshape 地图形状 …）
+          "encoding": {  // › 把数据字段映射到视觉通道（x、y、颜色、大小 …）
+            "y": {  // › y 方向的位置
+              "field": "remoteness",  // › 使用数据里的 “remoteness” 这一列
+              "type": "nominal",  // › 数据类型：名义（类别，没有顺序）
+              "scale": {  // › 比例尺：数据值如何映射到像素/颜色
+                "domain": [  // › 数据的取值范围（输入）
+                  "Major city",
+                  "Inner regional",
+                  "Outer regional",
+                  "Remote",
+                  "Very remote"
+                ]
+              }
+            },
+            "x": {"field": "share", "type": "quantitative"},  // › x 方向的位置
+            "text": {"field": "label"}  // › 要显示的文字（来自字段或固定值）
+          },
+          "transform": [  // › 数据变换管道：按顺序一步一步加工数据，上一步的输出是下一步的输入
+            {"calculate": "format(datum.share, '.0%') + ' (' + datum.n + ')'", "as": "label"}  // › 新字段：标签：百分比（无小数）+ 括号里的数量
+          ]
+        }
+      ]
+    },
+    {
+      "title": {"text": "Best Country Album", "subtitle": "35 of 39 wins with a recorded hometown"},  // › 标题文字；null 表示不要标题
+      "width": 160,  // › 宽度（像素）；"container" 表示撑满容器
+      "height": 150,  // › 高度（像素）
+      "data": {"url": "data/aria_wins.csv"},  // › 数据来源。url 指向 data/ 里的文件，或用 values 直接内嵌
+      "transform": [  // › 数据变换管道：按顺序一步一步加工数据，上一步的输出是下一步的输入
+        {"filter": "datum.category === 'Best Country Album' && datum.remoteness !== 'Unknown'"},  // › 只要乡村专辑奖、且偏远程度已知的行
+        {"aggregate": [{"op": "count", "as": "n"}], "groupby": ["remoteness"]},  // › 聚合：把多行合并成一行（count 数量 / sum 求和 / max 最大 …）
+        {"joinaggregate": [{"op": "sum", "field": "n", "as": "total"}]},  // › 聚合，但结果写回每一行，不会减少行数（用来给每行加“总数”之类）
+        {"calculate": "datum.n / datum.total", "as": "share"}  // › 新字段：占比 = 该组数量 ÷ 总数
+      ],
+      "layer": [  // › 图层：多个图叠在同一个坐标系里，后写的在上面
+        {
+          "mark": {"type": "bar", "color": "#6f8f3d", "cornerRadiusEnd": 2},  // › 用什么图形来画（bar 柱 / point 点 / rect 方块 / area 面积 / text 文字 / geoshape 地图形状 …）
+          "encoding": {  // › 把数据字段映射到视觉通道（x、y、颜色、大小 …）
+            "y": {  // › y 方向的位置
+              "field": "remoteness",  // › 使用数据里的 “remoteness” 这一列
+              "type": "nominal",  // › 数据类型：名义（类别，没有顺序）
+              "scale": {  // › 比例尺：数据值如何映射到像素/颜色
+                "domain": [  // › 数据的取值范围（输入）
+                  "Major city",
+                  "Inner regional",
+                  "Outer regional",
+                  "Remote",
+                  "Very remote"
+                ]
+              },
+              "axis": null  // › 不显示坐标轴
+            },
+            "x": {  // › x 方向的位置
+              "field": "share",  // › 使用数据里的 “share” 这一列
+              "type": "quantitative",  // › 数据类型：定量（数字，连续）
+              "scale": {"domain": [0, 1]},  // › 比例尺：数据值如何映射到像素/颜色
+              "axis": null  // › 不显示坐标轴
+            },
+            "tooltip": [  // › 鼠标悬停时显示的信息
+              {"field": "remoteness", "title": "Area"},  // › 使用数据里的 “remoteness", "title": "Area"}” 这一列
+              {"field": "n", "title": "Wins"},  // › 使用数据里的 “n", "title": "Wins"}” 这一列
+              {"field": "share", "title": "Share", "format": ".0%"}  // › 使用数据里的 “share", "title": "Share", "format": ".0%"}” 这一列
+            ]
+          }
+        },
+        {
+          "mark": {"type": "text", "align": "left", "dx": 4, "fontSize": 10.5, "color": "#3e3832"},  // › 用什么图形来画（bar 柱 / point 点 / rect 方块 / area 面积 / text 文字 / geoshape 地图形状 …）
+          "encoding": {  // › 把数据字段映射到视觉通道（x、y、颜色、大小 …）
+            "y": {  // › y 方向的位置
+              "field": "remoteness",  // › 使用数据里的 “remoteness” 这一列
+              "type": "nominal",  // › 数据类型：名义（类别，没有顺序）
+              "scale": {  // › 比例尺：数据值如何映射到像素/颜色
+                "domain": [  // › 数据的取值范围（输入）
+                  "Major city",
+                  "Inner regional",
+                  "Outer regional",
+                  "Remote",
+                  "Very remote"
+                ]
+              }
+            },
+            "x": {"field": "share", "type": "quantitative"},  // › x 方向的位置
+            "text": {"field": "label"}  // › 要显示的文字（来自字段或固定值）
+          },
+          "transform": [  // › 数据变换管道：按顺序一步一步加工数据，上一步的输出是下一步的输入
+            {"calculate": "format(datum.share, '.0%') + ' (' + datum.n + ')'", "as": "label"}  // › 新字段：标签：百分比（无小数）+ 括号里的数量
+          ]
+        }
+      ]
+    }
+  ],
+  "config": {  // › 全局默认样式
+    "title": {  // › 标题文字；null 表示不要标题
+      "fontSize": 12.5,  // › 字号
+      "subtitleFontSize": 10.5,
+      "subtitleColor": "#7a7064",
+      "anchor": "start",  // › 对齐锚点
+      "offset": 8  // › 离坐标轴/图形的距离
+    }
+  }
+}

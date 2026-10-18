@@ -1,0 +1,48 @@
+// 主题文件：所有 Vega-Lite 图共用的默认样式（字体、颜色、坐标轴、图例）。
+// 不用在每张图里重复写，改这里全站统一。
+{
+  "background": null,
+  "font": "Bricolage Grotesque, Helvetica, Arial, sans-serif",
+  "padding": 4,  // › 图四周留白，给标签/标题留空间
+  "view": {"stroke": null},  // › 单个视图（绘图区域）的样式，stroke:null 去掉外框
+  "title": {"fontSize": 13, "fontWeight": 600, "color": "#1f1c18", "anchor": "start"},  // › 标题文字；null 表示不要标题
+  "axis": {  // › 坐标轴的外观；null 表示不显示坐标轴
+    "labelFontSize": 11,  // › 坐标轴/图例标签的字号
+    "labelColor": "#5f574d",  // › 标签的颜色
+    "titleFontSize": 11,
+    "titleFontWeight": 500,
+    "titleColor": "#5f574d",
+    "domainColor": "#cfc5b6",
+    "tickColor": "#cfc5b6",
+    "gridColor": "#ece5da",  // › 网格线颜色
+    "labelPadding": 4  // › 标签和轴线的间距
+  },
+  "legend": {  // › 图例的外观；null 表示不显示图例
+    "labelFontSize": 11,  // › 坐标轴/图例标签的字号
+    "labelColor": "#3e3832",  // › 标签的颜色
+    "titleFontSize": 11,
+    "titleFontWeight": 600,
+    "titleColor": "#3e3832",
+    "symbolStrokeWidth": 0,
+    "rowPadding": 3
+  },
+  "header": {  // › 分面标题的样式；null 不显示
+    "labelFontSize": 12,  // › 坐标轴/图例标签的字号
+    "labelFontWeight": 600,  // › 标签的粗细
+    "labelColor": "#1f1c18",  // › 标签的颜色
+    "titleFontSize": 0
+  },
+  "text": {"font": "Bricolage Grotesque, Helvetica, Arial, sans-serif", "color": "#3e3832"},  // › 要显示的文字（来自字段或固定值）
+  "range": {  // › 映射到的输出范围（像素、颜色列表 …）
+    "category": [
+      "#0072B2",
+      "#CC79A7",
+      "#D55E00",
+      "#E69F00",
+      "#009E73",
+      "#56B4E9",
+      "#8c7b6b",
+      "#7a3b14"
+    ]
+  }
+}

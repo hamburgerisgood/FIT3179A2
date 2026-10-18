@@ -1,0 +1,256 @@
+// 图 10：热力图 / 矩阵 (heatmap) — Vega-Lite
+// 每年每个奖项一个格子，有人获奖的格子涂色，颜色 = 获奖者家乡州。
+// 关键点：rect + x/y 都是 ordinal；用 impute 或完整网格把没有获奖的格子也画出来。
+// 面试一句话：One cell per award per year, so gaps and streaks are visible at a glance.
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",  // › 声明这是 Vega-Lite / Vega 的哪个版本，编辑器据此做提示
+  "description": "Heatmap of every winner: one cell per award per year, shaded by the winner's total career wins across the three awards. Hover a cell to light up the same artist.",  // › 这张图的文字说明（给读屏软件和读代码的人看，不影响画面）
+  "data": {  // › 数据来源。url 指向 data/ 里的文件，或用 values 直接内嵌
+    "url": "data/aria_wins.csv",  // › 读取文件 data/aria_wins.csv
+    "format": {  // › 数字/日期的显示格式（d3-format，例如 d=整数，.0% 百分比）
+      "type": "csv",  // › 文件格式是 csv
+      "parse": {  // › 指定列的数据类型，csv 默认都是文本，不 parse 就不能做数学运算
+        "year": "number"
+      }
+    }
+  },
+  "transform": [  // › 数据变换管道：按顺序一步一步加工数据，上一步的输出是下一步的输入
+    {
+      "joinaggregate": [  // › 聚合，但结果写回每一行，不会减少行数（用来给每行加“总数”之类）
+        {
+          "op": "count",  // › 运算：count
+          "as": "career"  // › 计算结果存为新字段 "career"
+        }
+      ],
+      "groupby": [  // › 按 [ 分组，每组单独计算
+        "artist"
+      ]
+    }
+  ],
+  "width": {  // › 宽度（像素）；"container" 表示撑满容器
+    "step": 14  // › 每个类别占多少像素（高度/宽度由类别数 × step 决定）
+  },
+  "height": {  // › 高度（像素）
+    "step": 40  // › 每个类别占多少像素（高度/宽度由类别数 × step 决定）
+  },
+  "layer": [  // › 图层：多个图叠在同一个坐标系里，后写的在上面
+    {
+      "mark": {  // › 用什么图形来画（bar 柱 / point 点 / rect 方块 / area 面积 / text 文字 / geoshape 地图形状 …）
+        "type": "rect",  // › 画矩形（热力图/方块图）
+        "stroke": "#fbf8f3",  // › 边线颜色
+        "strokeWidth": 1  // › 边线粗细（像素）
+      },
+      "params": [  // › 参数/交互：滑块、下拉、选择区域 …，其他地方可以用名字引用
+        {
+          "name": "hoverArtist",  // › 命名为 "hoverArtist"，别处用这个名字引用
+          "select": {  // › 选择方式：point 点选，interval 框选
+            "type": "point",  // › 画点
+            "fields": [  // › 要运算的字段列表
+              "artist"
+            ],
+            "on": "mouseover",  // › 触发选择的事件（如 mouseover、click）
+            "clear": "mouseout"  // › 什么事件清除选择
+          }
+        }
+      ],
+      "encoding": {  // › 把数据字段映射到视觉通道（x、y、颜色、大小 …）
+        "x": {  // › x 方向的位置
+          "field": "year",  // › 使用数据里的 “year” 这一列
+          "type": "ordinal",  // › 数据类型：有序类别
+          "title": null,  // › 不显示标题
+          "scale": {  // › 比例尺：数据值如何映射到像素/颜色
+            "domain": [  // › 数据的取值范围（输入）
+              1987,
+              1988,
+              1989,
+              1990,
+              1991,
+              1992,
+              1993,
+              1994,
+              1995,
+              1996,
+              1997,
+              1998,
+              1999,
+              2000,
+              2001,
+              2002,
+              2003,
+              2004,
+              2005,
+              2006,
+              2007,
+              2008,
+              2009,
+              2010,
+              2011,
+              2012,
+              2013,
+              2014,
+              2015,
+              2016,
+              2017,
+              2018,
+              2019,
+              2020,
+              2021,
+              2022,
+              2023,
+              2024,
+              2025
+            ]
+          },
+          "axis": {  // › 坐标轴的外观；null 表示不显示坐标轴
+            "labelExpr": "datum.value % 5 === 0 || datum.value === 1987 ? datum.value : ''",  // › 年份是 5 的倍数或 1987 才显示标签，其余为空
+            "labelAngle": 0,  // › 标签旋转角度
+            "domain": false,  // › 数据的取值范围（输入）
+            "ticks": false,  // › 是否画刻度线
+            "labelOverlap": false  // › 标签重叠时如何处理
+          }
+        },
+        "y": {  // › y 方向的位置
+          "field": "category",  // › 使用数据里的 “category” 这一列
+          "type": "nominal",  // › 数据类型：名义（类别，没有顺序）
+          "title": null,  // › 不显示标题
+          "sort": [  // › 排序：[
+            "Album of the Year",
+            "Best Group",
+            "Best Country Album"
+          ],
+          "axis": {  // › 坐标轴的外观；null 表示不显示坐标轴
+            "domain": false,  // › 数据的取值范围（输入）
+            "ticks": false,  // › 是否画刻度线
+            "labelFontWeight": 600,  // › 标签的粗细
+            "labelColor": "#1f1c18",  // › 标签的颜色
+            "labelFontSize": 11.5  // › 坐标轴/图例标签的字号
+          }
+        },
+        "color": {  // › 颜色通道：数据字段 → 颜色
+          "field": "career",  // › 使用数据里的 “career” 这一列
+          "type": "quantitative",  // › 数据类型：定量（数字，连续）
+          "title": "Winner's career wins (all three awards)",  // › 标题文字；null 表示不要标题
+          "scale": {  // › 比例尺：数据值如何映射到像素/颜色
+            "type": "linear",  // › 线性比例尺
+            "domain": [  // › 数据的取值范围（输入）
+              1,
+              11
+            ],
+            "range": [  // › 映射到的输出范围（像素、颜色列表 …）
+              "#f6ecd3",
+              "#e0b660",
+              "#a36a12",
+              "#5c3a08"
+            ],
+            "interpolate": "hcl"  // › 连线/颜色的插值方式（monotone 平滑；hcl 感知均匀的颜色混合）
+          },
+          "legend": {  // › 图例的外观；null 表示不显示图例
+            "orient": "top",  // › 放在图的哪一边（top/bottom/left/right）
+            "direction": "horizontal",  // › 图例排列方向（horizontal/vertical）
+            "gradientLength": 240,  // › 渐变图例条的长度（像素）
+            "titleLimit": 400,  // › 标题最长多少像素
+            "values": [  // › 手动指定显示哪些值（刻度/图例项），或内嵌数据行
+              1,
+              3,
+              5,
+              7,
+              9,
+              11
+            ]
+          }
+        },
+        "opacity": {  // › 透明度 0（透明）~1（不透明）
+          "condition": {  // › 条件样式：满足 test/param 时用这个值，否则用外面的默认值
+            "param": "hoverArtist",  // › 引用参数 "hoverArtist"
+            "empty": true,  // › 没有选中时是否把条件当成 true
+            "value": 1  // › 一个固定值（不是数据字段）
+          },
+          "value": 0.22  // › 一个固定值（不是数据字段）
+        },
+        "tooltip": [  // › 鼠标悬停时显示的信息
+          {
+            "field": "year",  // › 使用数据里的 “year” 这一列
+            "title": "Year"  // › 标题文字；null 表示不要标题
+          },
+          {
+            "field": "category",  // › 使用数据里的 “category” 这一列
+            "title": "Award"  // › 标题文字；null 表示不要标题
+          },
+          {
+            "field": "winner",  // › 使用数据里的 “winner” 这一列
+            "title": "Winner"  // › 标题文字；null 表示不要标题
+          },
+          {
+            "field": "work",  // › 使用数据里的 “work” 这一列
+            "title": "For"  // › 标题文字；null 表示不要标题
+          },
+          {
+            "field": "artist",  // › 使用数据里的 “artist” 这一列
+            "title": "Artist"  // › 标题文字；null 表示不要标题
+          },
+          {
+            "field": "career",  // › 使用数据里的 “career” 这一列
+            "title": "Artist's career wins"  // › 标题文字；null 表示不要标题
+          },
+          {
+            "field": "place",  // › 使用数据里的 “place” 这一列
+            "title": "Hometown"  // › 标题文字；null 表示不要标题
+          },
+          {
+            "field": "state",  // › 使用数据里的 “state” 这一列
+            "title": "State"  // › 标题文字；null 表示不要标题
+          }
+        ]
+      }
+    },
+    {
+      "transform": [  // › 数据变换管道：按顺序一步一步加工数据，上一步的输出是下一步的输入
+        {
+          "filter": "datum.career >= 5"  // › 只保留职业生涯 ≥ 5 年的艺人
+        },
+        {
+          "calculate": "{'Kasey Chambers':'KC','Tame Impala':'TI','Troy Cassar-Daley':'TC','Powderfinger':'P'}[datum.artist]",  // › 新字段：用对象当查找表：艺人名 → 单字母缩写
+          "as": "initials"  // › 计算结果存为新字段 "initials"
+        }
+      ],
+      "mark": {  // › 用什么图形来画（bar 柱 / point 点 / rect 方块 / area 面积 / text 文字 / geoshape 地图形状 …）
+        "type": "text",  // › 画文字
+        "fontSize": 8.5,  // › 字号
+        "fontWeight": 700  // › 字重（400 常规，700 粗体）
+      },
+      "encoding": {  // › 把数据字段映射到视觉通道（x、y、颜色、大小 …）
+        "x": {  // › x 方向的位置
+          "field": "year",  // › 使用数据里的 “year” 这一列
+          "type": "ordinal"  // › 数据类型：有序类别
+        },
+        "y": {  // › y 方向的位置
+          "field": "category",  // › 使用数据里的 “category” 这一列
+          "type": "nominal",  // › 数据类型：名义（类别，没有顺序）
+          "sort": [  // › 排序：[
+            "Album of the Year",
+            "Best Group",
+            "Best Country Album"
+          ]
+        },
+        "text": {  // › 要显示的文字（来自字段或固定值）
+          "field": "initials"  // › 使用数据里的 “initials” 这一列
+        },
+        "color": {  // › 颜色通道：数据字段 → 颜色
+          "condition": {  // › 条件样式：满足 test/param 时用这个值，否则用外面的默认值
+            "test": "datum.career >= 8",  // › 条件：职业生涯 ≥ 8 年才用 condition 里的样式
+            "value": "#fffaf0"  // › 一个固定值（不是数据字段）
+          },
+          "value": "#1f1c18"  // › 一个固定值（不是数据字段）
+        },
+        "opacity": {  // › 透明度 0（透明）~1（不透明）
+          "condition": {  // › 条件样式：满足 test/param 时用这个值，否则用外面的默认值
+            "param": "hoverArtist",  // › 引用参数 "hoverArtist"
+            "empty": true,  // › 没有选中时是否把条件当成 true
+            "value": 1  // › 一个固定值（不是数据字段）
+          },
+          "value": 0.22  // › 一个固定值（不是数据字段）
+        }
+      }
+    }
+  ]
+}

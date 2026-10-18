@@ -1,0 +1,64 @@
+// 图 5：华夫图 (waffle chart) — Vega-Lite
+// 100 个小方块，每个方块 = 1%，按州的占比涂色。
+// 关键点：用 calculate 把序号变成行列坐标（取余 % 和取整 floor）。
+// 面试一句话：I turn each percentage point into one square and compute its row and column with modulo and floor.
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",  // › 声明这是 Vega-Lite / Vega 的哪个版本，编辑器据此做提示
+  "description": "Paired waffle charts: 100 squares = all Australians (ABS, March 2026) vs 100 squares = all 116 ARIA wins in this story, coloured by state.",  // › 这张图的文字说明（给读屏软件和读代码的人看，不影响画面）
+  "data": {"url": "data/waffle.csv", "format": {"type": "csv", "parse": {"square": "number"}}},  // › 数据来源。url 指向 data/ 里的文件，或用 values 直接内嵌
+  "transform": [  // › 数据变换管道：按顺序一步一步加工数据，上一步的输出是下一步的输入
+    {"calculate": "datum.square % 10", "as": "col"},  // › 新字段：取余数：这个方块在第几列（0–9）
+    {"calculate": "floor(datum.square / 10)", "as": "row"}  // › 新字段：整除 10 取整：这个方块在第几行（0–9）
+  ],
+  "facet": {  // › 分面：按一个字段拆成很多小图（small multiples）
+    "column": {  // › 每个值一列（水平排列的小图）
+      "field": "measure",  // › 使用数据里的 “measure” 这一列
+      "type": "nominal",  // › 数据类型：名义（类别，没有顺序）
+      "sort": ["Share of Australians", "Share of ARIA wins"],  // › 排序：["Share of Australians", "Share of ARIA wins"]
+      "title": null,  // › 不显示标题
+      "header": {  // › 分面标题的样式；null 不显示
+        "labelFontSize": 13,  // › 坐标轴/图例标签的字号
+        "labelFontWeight": 700,  // › 标签的粗细
+        "labelAnchor": "start",  // › 标签对齐位置
+        "labelPadding": 8  // › 标签和轴线的间距
+      }
+    }
+  },
+  "spacing": 40,  // › 分面各小图的间距；负数让它们重叠（山脊图用）
+  "spec": {  // › 分面里每个小图的画法
+    "width": 230,  // › 宽度（像素）；"container" 表示撑满容器
+    "height": 230,  // › 高度（像素）
+    "mark": {"type": "square", "size": 300, "opacity": 1},  // › 用什么图形来画（bar 柱 / point 点 / rect 方块 / area 面积 / text 文字 / geoshape 地图形状 …）
+    "encoding": {  // › 把数据字段映射到视觉通道（x、y、颜色、大小 …）
+      "x": {"field": "col", "type": "ordinal", "axis": null},  // › x 方向的位置
+      "y": {"field": "row", "type": "ordinal", "axis": null, "sort": "descending"},  // › y 方向的位置
+      "color": {  // › 颜色通道：数据字段 → 颜色
+        "field": "state",  // › 使用数据里的 “state” 这一列
+        "type": "nominal",  // › 数据类型：名义（类别，没有顺序）
+        "title": "Each square = 1%",  // › 标题文字；null 表示不要标题
+        "scale": {  // › 比例尺：数据值如何映射到像素/颜色
+          "domain": ["NSW", "VIC", "QLD", "WA", "SA", "TAS", "ACT", "NT"],  // › 数据的取值范围（输入）
+          "range": [  // › 映射到的输出范围（像素、颜色列表 …）
+            "#0072B2",
+            "#CC79A7",
+            "#D55E00",
+            "#E69F00",
+            "#009E73",
+            "#56B4E9",
+            "#8c7b6b",
+            "#7a3b14"
+          ]
+        },
+        "legend": {"orient": "right", "symbolType": "square", "symbolSize": 140}  // › 图例的外观；null 表示不显示图例
+      },
+      "opacity": {"condition": {"param": "pick", "value": 1}, "value": 0.18},  // › 透明度 0（透明）~1（不透明）
+      "tooltip": [{"field": "measure", "title": "Measure"}, {"field": "state", "title": "State"}]  // › 鼠标悬停时显示的信息
+    },
+    "params": [  // › 参数/交互：滑块、下拉、选择区域 …，其他地方可以用名字引用
+      {
+        "name": "pick",  // › 命名为 "pick"，别处用这个名字引用
+        "select": {"type": "point", "fields": ["state"], "on": "mouseover", "clear": "mouseout"}  // › 选择方式：point 点选，interval 框选
+      }
+    ]
+  }
+}

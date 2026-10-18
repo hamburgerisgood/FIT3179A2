@@ -1,0 +1,131 @@
+// 图 9：Bump chart（名次变化图）— Vega-Lite
+// 每个州每个时期的排名，线连起来看谁上升谁下降。
+// 关键点：window rank 算名次；y 轴反转（1 在最上面）；line + point 两层。
+// 面试一句话：I rank states within each period and draw the rank rather than the count, so changes in order are obvious.
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",  // › 声明这是 Vega-Lite / Vega 的哪个版本，编辑器据此做提示
+  "description": "Bump chart: running rank of the ten artists with three or more wins, measured every five years. Rank 1 = most wins so far. Ties are broken by total career wins, then alphabetically.",  // › 这张图的文字说明（给读屏软件和读代码的人看，不影响画面）
+  "width": 540,  // › 宽度（像素）；"container" 表示撑满容器
+  "height": 330,  // › 高度（像素）
+  "data": {"url": "data/aria_wins.csv", "format": {"type": "csv", "parse": {"year": "number"}}},  // › 数据来源。url 指向 data/ 里的文件，或用 values 直接内嵌
+  "transform": [  // › 数据变换管道：按顺序一步一步加工数据，上一步的输出是下一步的输入
+    {"joinaggregate": [{"op": "count", "as": "career"}], "groupby": ["artist"]},  // › 聚合，但结果写回每一行，不会减少行数（用来给每行加“总数”之类）
+    {"filter": "datum.career >= 3"},  // › 只保留职业生涯 ≥ 3 年的艺人
+    {"calculate": "ceil(datum.year / 5) * 5", "as": "checkpoint"},  // › 新字段：把年份归入 5 年一组（向上取整到 5 的倍数）
+    {"aggregate": [{"op": "count", "as": "n"}], "groupby": ["artist", "checkpoint", "career"]},  // › 聚合：把多行合并成一行（count 数量 / sum 求和 / max 最大 …）
+    {
+      "impute": "n",  // › 补缺：把缺少的组合补成一行并填默认值，保证每个组合都有数据
+      "key": "checkpoint",  // › 用来匹配的字段/键
+      "keyvals": [1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025],  // › 补缺时需要出现的全部取值
+      "groupby": ["artist", "career"],  // › 按 ["artist", "career"] 分组，每组单独计算
+      "value": 0  // › 一个固定值（不是数据字段）
+    },
+    {
+      "window": [{"op": "sum", "field": "n", "as": "so_far"}],  // › 窗口计算（排名 rank、累计和等），按 sort 排序后逐行算
+      "groupby": ["artist"],  // › 按 ["artist"] 分组，每组单独计算
+      "sort": [{"field": "checkpoint", "order": "ascending"}],  // › 排序：[{"field": "checkpoint", "order": "ascending"}]
+      "frame": [null, 0]  // › 窗口范围 [向前, 向后]；[null,0] = 从开头累计到当前
+    },
+    {"filter": "datum.so_far > 0"},  // › 只保留累计获奖 > 0 的行（还没拿过奖的不画）
+    {
+      "window": [{"op": "row_number", "as": "rank"}],  // › 窗口计算（排名 rank、累计和等），按 sort 排序后逐行算
+      "groupby": ["checkpoint"],  // › 按 ["checkpoint"] 分组，每组单独计算
+      "sort": [  // › 排序：[
+        {"field": "so_far", "order": "descending"},  // › 使用数据里的 “so_far", "order": "descending"}” 这一列
+        {"field": "career", "order": "descending"},  // › 使用数据里的 “career", "order": "descending"}” 这一列
+        {"field": "artist", "order": "ascending"}  // › 使用数据里的 “artist", "order": "ascending"}” 这一列
+      ]
+    }
+  ],
+  "encoding": {  // › 把数据字段映射到视觉通道（x、y、颜色、大小 …）
+    "x": {  // › x 方向的位置
+      "field": "checkpoint",  // › 使用数据里的 “checkpoint” 这一列
+      "type": "ordinal",  // › 数据类型：有序类别
+      "title": null,  // › 不显示标题
+      "axis": {  // › 坐标轴的外观；null 表示不显示坐标轴
+        "labelExpr": "'by ' + datum.label",  // › 给标签前面加上 by
+        "labelAngle": 0,  // › 标签旋转角度
+        "domain": false,  // › 数据的取值范围（输入）
+        "ticks": false,  // › 是否画刻度线
+        "grid": true,  // › 是否画网格线
+        "gridColor": "#efe9df"  // › 网格线颜色
+      }
+    },
+    "y": {  // › y 方向的位置
+      "field": "rank",  // › 使用数据里的 “rank” 这一列
+      "type": "ordinal",  // › 数据类型：有序类别
+      "title": "Rank by wins so far",  // › 标题文字；null 表示不要标题
+      "axis": {"domain": false, "ticks": false}  // › 坐标轴的外观；null 表示不显示坐标轴
+    },
+    "color": {  // › 颜色通道：数据字段 → 颜色
+      "field": "artist",  // › 使用数据里的 “artist” 这一列
+      "type": "nominal",  // › 数据类型：名义（类别，没有顺序）
+      "legend": null,  // › 不显示图例
+      "scale": {  // › 比例尺：数据值如何映射到像素/颜色
+        "domain": [  // › 数据的取值范围（输入）
+          "Kasey Chambers",
+          "Troy Cassar-Daley",
+          "Tame Impala",
+          "Powderfinger",
+          "John Williamson",
+          "INXS",
+          "The Cruel Sea",
+          "Silverchair",
+          "Keith Urban",
+          "Amyl and the Sniffers"
+        ],
+        "range": [  // › 映射到的输出范围（像素、颜色列表 …）
+          "#6f8f3d",
+          "#a7b36a",
+          "#c9971f",
+          "#d55e00",
+          "#4f7a3a",
+          "#4a4e8c",
+          "#7b8cc4",
+          "#0072B2",
+          "#8c7b6b",
+          "#CC79A7"
+        ]
+      }
+    },
+    "opacity": {"condition": {"param": "hover", "empty": true, "value": 1}, "value": 0.15}  // › 透明度 0（透明）~1（不透明）
+  },
+  "layer": [  // › 图层：多个图叠在同一个坐标系里，后写的在上面
+    {"mark": {"type": "line", "strokeWidth": 3, "interpolate": "monotone"}},  // › 用什么图形来画（bar 柱 / point 点 / rect 方块 / area 面积 / text 文字 / geoshape 地图形状 …）
+    {
+      "mark": {"type": "circle", "size": 150, "stroke": "#fbf8f3", "strokeWidth": 1.5},  // › 用什么图形来画（bar 柱 / point 点 / rect 方块 / area 面积 / text 文字 / geoshape 地图形状 …）
+      "encoding": {  // › 把数据字段映射到视觉通道（x、y、颜色、大小 …）
+        "tooltip": [  // › 鼠标悬停时显示的信息
+          {"field": "artist", "title": "Artist"},  // › 使用数据里的 “artist", "title": "Artist"}” 这一列
+          {"field": "checkpoint", "title": "By the end of"},  // › 使用数据里的 “checkpoint", "title": "By the end of"}” 这一列
+          {"field": "so_far", "title": "Wins so far"},  // › 使用数据里的 “so_far", "title": "Wins so far"}” 这一列
+          {"field": "rank", "title": "Rank"}  // › 使用数据里的 “rank", "title": "Rank"}” 这一列
+        ]
+      },
+      "params": [  // › 参数/交互：滑块、下拉、选择区域 …，其他地方可以用名字引用
+        {
+          "name": "hover",  // › 命名为 "hover"，别处用这个名字引用
+          "select": {  // › 选择方式：point 点选，interval 框选
+            "type": "point",  // › 画点
+            "fields": ["artist"],  // › 要运算的字段列表
+            "on": "mouseover",  // › 触发选择的事件（如 mouseover、click）
+            "clear": "mouseout",  // › 什么事件清除选择
+            "nearest": true  // › 选中离鼠标最近的元素
+          }
+        }
+      ]
+    },
+    {
+      "transform": [  // › 数据变换管道：按顺序一步一步加工数据，上一步的输出是下一步的输入
+        {"filter": "datum.checkpoint === 2025"},  // › 只取 2025 年这个检查点的行
+        {"calculate": "datum.artist + ' (' + datum.so_far + ')'", "as": "label"}  // › 新字段：标签：艺人名 + 括号里的累计获奖数
+      ],
+      "mark": {"type": "text", "align": "left", "dx": 12, "fontSize": 11, "fontWeight": 600},  // › 用什么图形来画（bar 柱 / point 点 / rect 方块 / area 面积 / text 文字 / geoshape 地图形状 …）
+      "encoding": {"text": {"field": "label"}}  // › 把数据字段映射到视觉通道（x、y、颜色、大小 …）
+    },
+    {
+      "mark": {"type": "text", "fontSize": 9, "fontWeight": 700, "color": "#fffaf0"},  // › 用什么图形来画（bar 柱 / point 点 / rect 方块 / area 面积 / text 文字 / geoshape 地图形状 …）
+      "encoding": {"text": {"field": "so_far"}, "color": {"value": "#fffaf0"}}  // › 把数据字段映射到视觉通道（x、y、颜色、大小 …）
+    }
+  ]
+}

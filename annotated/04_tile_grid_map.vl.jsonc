@@ -1,0 +1,131 @@
+// 图 4：瓦片网格地图 (tile grid map) — Vega-Lite
+// 每个州一个等大的方格，放在近似真实位置的网格上，颜色表示数值。
+// 关键点：x/y 是手动定义的网格坐标（data 里的 col、row），不是经纬度；这样小州（ACT、TAS）不会被忽略。
+// 面试一句话：Every state gets the same size tile so small states are not visually lost.
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",  // › 声明这是 Vega-Lite / Vega 的哪个版本，编辑器据此做提示
+  "description": "Tile-grid map: one small chart per state, arranged roughly where the state sits on the map. Bars show wins per decade, split by award.",  // › 这张图的文字说明（给读屏软件和读代码的人看，不影响画面）
+  "data": {"url": "data/aria_wins.csv", "format": {"type": "csv", "parse": {"year": "number"}}},  // › 数据来源。url 指向 data/ 里的文件，或用 values 直接内嵌
+  "transform": [  // › 数据变换管道：按顺序一步一步加工数据，上一步的输出是下一步的输入
+    {"filter": "datum.state !== 'Unknown'"},  // › 去掉没有州信息的行
+    {"calculate": "floor(datum.year / 10) * 10 + 's'", "as": "decade"},  // › 新字段：把年份变成年代标签，例如 1994 → 1990s
+    {"aggregate": [{"op": "count", "as": "wins"}], "groupby": ["state", "decade", "category"]},  // › 聚合：把多行合并成一行（count 数量 / sum 求和 / max 最大 …）
+    {
+      "lookup": "state",  // › 查表：用 key 去另一个数据集里找对应行，把需要的字段拼进来
+      "from": {  // › 这个 mark/数据 的数据来源
+        "data": {"url": "data/state_points.csv"},  // › 数据来源。url 指向 data/ 里的文件，或用 values 直接内嵌
+        "key": "state",  // › 用来匹配的字段/键
+        "fields": ["tile_row", "tile_col", "state_name"]  // › 要运算的字段列表
+      }
+    },
+    {"calculate": "toNumber(datum.tile_row)", "as": "tile_row"},  // › 新字段：把瓦片的行号从文本转成数字
+    {"calculate": "toNumber(datum.tile_col)", "as": "tile_col"}  // › 新字段：把瓦片的列号从文本转成数字
+  ],
+  "facet": {  // › 分面：按一个字段拆成很多小图（small multiples）
+    "row": {"field": "tile_row", "type": "ordinal", "header": null},  // › 每个值一行（垂直排列的小图）
+    "column": {"field": "tile_col", "type": "ordinal", "header": null}  // › 每个值一列（水平排列的小图）
+  },
+  "spacing": {"row": 10, "column": 10},  // › 分面各小图的间距；负数让它们重叠（山脊图用）
+  "spec": {  // › 分面里每个小图的画法
+    "width": 290,  // › 宽度（像素）；"container" 表示撑满容器
+    "height": 135,  // › 高度（像素）
+    "encoding": {  // › 把数据字段映射到视觉通道（x、y、颜色、大小 …）
+      "x": {  // › x 方向的位置
+        "field": "decade",  // › 使用数据里的 “decade” 这一列
+        "type": "ordinal",  // › 数据类型：有序类别
+        "scale": {  // › 比例尺：数据值如何映射到像素/颜色
+          "domain": ["1980s", "1990s", "2000s", "2010s", "2020s"],  // › 数据的取值范围（输入）
+          "paddingInner": 0.28,  // › 相邻类别之间的间隙比例/像素
+          "paddingOuter": 0.4  // › 两端的留白
+        },
+        "axis": null  // › 不显示坐标轴
+      }
+    },
+    "layer": [  // › 图层：多个图叠在同一个坐标系里，后写的在上面
+      {
+        "transform": [{"aggregate": [{"op": "count", "as": "n"}], "groupby": ["state"]}],  // › 数据变换管道：按顺序一步一步加工数据，上一步的输出是下一步的输入
+        "mark": {  // › 用什么图形来画（bar 柱 / point 点 / rect 方块 / area 面积 / text 文字 / geoshape 地图形状 …）
+          "type": "rect",  // › 画矩形（热力图/方块图）
+          "x": 0,  // › x 方向的位置
+          "y": 0,  // › y 方向的位置
+          "x2": 290,  // › 区间图形的另一端（x 方向终点）
+          "y2": 135,  // › 区间图形的另一端（y 方向终点）
+          "fill": "#f1ebe1",  // › 填充色
+          "cornerRadius": 3  // › 圆角半径
+        },
+        "encoding": {"x": null}  // › 把数据字段映射到视觉通道（x、y、颜色、大小 …）
+      },
+      {
+        "mark": {"type": "bar"},  // › 用什么图形来画（bar 柱 / point 点 / rect 方块 / area 面积 / text 文字 / geoshape 地图形状 …）
+        "encoding": {  // › 把数据字段映射到视觉通道（x、y、颜色、大小 …）
+          "y": {  // › y 方向的位置
+            "field": "wins",  // › 使用数据里的 “wins” 这一列
+            "type": "quantitative",  // › 数据类型：定量（数字，连续）
+            "aggregate": "sum",  // › 聚合：把多行合并成一行（count 数量 / sum 求和 / max 最大 …）
+            "scale": {"domain": [0, 12], "range": [112, 42]},  // › 比例尺：数据值如何映射到像素/颜色
+            "axis": null  // › 不显示坐标轴
+          },
+          "color": {  // › 颜色通道：数据字段 → 颜色
+            "field": "category",  // › 使用数据里的 “category” 这一列
+            "type": "nominal",  // › 数据类型：名义（类别，没有顺序）
+            "title": null,  // › 不显示标题
+            "scale": {  // › 比例尺：数据值如何映射到像素/颜色
+              "domain": ["Album of the Year", "Best Group", "Best Country Album"],  // › 数据的取值范围（输入）
+              "range": ["#c9971f", "#4a4e8c", "#6f8f3d"]  // › 映射到的输出范围（像素、颜色列表 …）
+            },
+            "legend": {"orient": "top", "direction": "horizontal", "symbolType": "square"}  // › 图例的外观；null 表示不显示图例
+          },
+          "order": {"field": "category", "sort": "ascending"},  // › 顺序：{"field": "category", "sort": "ascending"}
+          "tooltip": [  // › 鼠标悬停时显示的信息
+            {"field": "state_name", "title": "State"},  // › 使用数据里的 “state_name", "title": "State"}” 这一列
+            {"field": "decade", "title": "Decade"},  // › 使用数据里的 “decade", "title": "Decade"}” 这一列
+            {"field": "category", "title": "Award"},  // › 使用数据里的 “category", "title": "Award"}” 这一列
+            {"field": "wins", "aggregate": "sum", "title": "Wins"}  // › 使用数据里的 “wins", "aggregate": "sum", "title": "Wins"}” 这一列
+          ]
+        }
+      },
+      {
+        "transform": [  // › 数据变换管道：按顺序一步一步加工数据，上一步的输出是下一步的输入
+          {
+            "aggregate": [{"op": "sum", "field": "wins", "as": "total"}],  // › 聚合：把多行合并成一行（count 数量 / sum 求和 / max 最大 …）
+            "groupby": ["state", "decade"]  // › 按 ["state", "decade"] 分组，每组单独计算
+          }
+        ],
+        "mark": {"type": "text", "dy": -6, "fontSize": 11, "color": "#5f574d"},  // › 用什么图形来画（bar 柱 / point 点 / rect 方块 / area 面积 / text 文字 / geoshape 地图形状 …）
+        "encoding": {  // › 把数据字段映射到视觉通道（x、y、颜色、大小 …）
+          "y": {  // › y 方向的位置
+            "field": "total",  // › 使用数据里的 “total” 这一列
+            "type": "quantitative",  // › 数据类型：定量（数字，连续）
+            "scale": {"domain": [0, 12], "range": [112, 42]}  // › 比例尺：数据值如何映射到像素/颜色
+          },
+          "text": {"field": "total"}  // › 要显示的文字（来自字段或固定值）
+        }
+      },
+      {
+        "transform": [  // › 数据变换管道：按顺序一步一步加工数据，上一步的输出是下一步的输入
+          {"aggregate": [{"op": "count", "as": "n"}], "groupby": ["state", "decade"]},  // › 聚合：把多行合并成一行（count 数量 / sum 求和 / max 最大 …）
+          {"calculate": "'’' + slice(datum.decade, 2)", "as": "short"}  // › 新字段：把 1990s 变成 ’90s 这样的短标签（取后两位）
+        ],
+        "mark": {"type": "text", "y": 126, "fontSize": 10.5, "color": "#8a7f72"},  // › 用什么图形来画（bar 柱 / point 点 / rect 方块 / area 面积 / text 文字 / geoshape 地图形状 …）
+        "encoding": {"text": {"field": "short"}}  // › 把数据字段映射到视觉通道（x、y、颜色、大小 …）
+      },
+      {
+        "transform": [  // › 数据变换管道：按顺序一步一步加工数据，上一步的输出是下一步的输入
+          {"aggregate": [{"op": "sum", "field": "wins", "as": "total"}], "groupby": ["state"]},  // › 聚合：把多行合并成一行（count 数量 / sum 求和 / max 最大 …）
+          {"calculate": "datum.state + ' · ' + datum.total", "as": "label"}  // › 新字段：标签：州名 · 数量
+        ],
+        "mark": {  // › 用什么图形来画（bar 柱 / point 点 / rect 方块 / area 面积 / text 文字 / geoshape 地图形状 …）
+          "type": "text",  // › 画文字
+          "align": "left",  // › 文字水平对齐
+          "baseline": "top",  // › 文字垂直对齐
+          "fontSize": 14,  // › 字号
+          "fontWeight": 700,  // › 字重（400 常规，700 粗体）
+          "color": "#1f1c18",  // › 颜色通道：数据字段 → 颜色
+          "x": 10,  // › x 方向的位置
+          "y": 9  // › y 方向的位置
+        },
+        "encoding": {"x": null, "text": {"field": "label"}}  // › 把数据字段映射到视觉通道（x、y、颜色、大小 …）
+      }
+    ]
+  }
+}

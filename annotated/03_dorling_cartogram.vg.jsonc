@@ -1,0 +1,238 @@
+// 图 3：Dorling 变形图 (Dorling cartogram) — Vega
+// 每个州一个圆，面积 = 获奖数，位置靠近真实位置；颜色 = 获奖占比 ÷ 人口占比。
+// 关键点：force 模拟（collide 防重叠 + x/y 拉回真实位置）；datum.datum 是因为 force 把原数据包了一层。
+// 面试一句话：A force simulation keeps each circle near its state while the collide force stops overlap.
+{
+  "$schema": "https://vega.github.io/schema/vega/v5.json",  // › 声明这是 Vega-Lite / Vega 的哪个版本，编辑器据此做提示
+  "description": "Dorling cartogram: each state is a circle whose area is its number of ARIA wins, placed near its real position. Colour compares the state's share of wins with its share of Australia's population (ABS, March 2026).",  // › 这张图的文字说明（给读屏软件和读代码的人看，不影响画面）
+  "width": 420,  // › 宽度（像素）；"container" 表示撑满容器
+  "height": 440,  // › 高度（像素）
+  "padding": 4,  // › 图四周留白，给标签/标题留空间
+  "data": [  // › 数据来源。url 指向 data/ 里的文件，或用 values 直接内嵌
+    {
+      "name": "outline",  // › 命名为 "outline"，别处用这个名字引用
+      "url": "data/au_states.topo.json",  // › 读取文件 data/au_states.topo.json
+      "format": {"type": "topojson", "feature": "states"}  // › 数字/日期的显示格式（d3-format，例如 d=整数，.0% 百分比）
+    },
+    {
+      "name": "wins",  // › 命名为 "wins"，别处用这个名字引用
+      "url": "data/aria_wins.csv",  // › 读取文件 data/aria_wins.csv
+      "format": {"type": "csv"},  // › 数字/日期的显示格式（d3-format，例如 d=整数，.0% 百分比）
+      "transform": [{"type": "aggregate", "groupby": ["state"], "ops": ["count"], "as": ["wins"]}]  // › 数据变换管道：按顺序一步一步加工数据，上一步的输出是下一步的输入
+    },
+    {
+      "name": "population",  // › 命名为 "population"，别处用这个名字引用
+      "url": "data/source/abs_erp_2026q1.csv",  // › 读取文件 data/source/abs_erp_2026q1.csv
+      "format": {"type": "csv", "parse": {"population_thousands": "number"}}  // › 数字/日期的显示格式（d3-format，例如 d=整数，.0% 百分比）
+    },
+    {
+      "name": "nodes",  // › 命名为 "nodes"，别处用这个名字引用
+      "url": "data/state_points.csv",  // › 读取文件 data/state_points.csv
+      "format": {"type": "csv", "parse": {"lon": "number", "lat": "number"}},  // › 数字/日期的显示格式（d3-format，例如 d=整数，.0% 百分比）
+      "transform": [  // › 数据变换管道：按顺序一步一步加工数据，上一步的输出是下一步的输入
+        {
+          "type": "lookup",  // › 查表合并
+          "from": "wins",  // › 这个 mark/数据 的数据来源
+          "key": "state",  // › 用来匹配的字段/键
+          "fields": ["state"],  // › 要运算的字段列表
+          "values": ["wins"],  // › 手动指定显示哪些值（刻度/图例项），或内嵌数据行
+          "default": 0  // › 找不到时的默认值
+        },
+        {
+          "type": "lookup",  // › 查表合并
+          "from": "population",  // › 这个 mark/数据 的数据来源
+          "key": "state",  // › 用来匹配的字段/键
+          "fields": ["state"],  // › 要运算的字段列表
+          "values": ["population_thousands"],  // › 手动指定显示哪些值（刻度/图例项），或内嵌数据行
+          "as": ["pop"]  // › 计算结果存为新字段 ["pop"]
+        },
+        {
+          "type": "joinaggregate",  // › 聚合但保留所有行
+          "ops": ["sum", "sum"],  // › 要做的运算列表（和 fields、as 一一对应）
+          "fields": ["wins", "pop"],  // › 要运算的字段列表
+          "as": ["total_wins", "total_pop"]  // › 计算结果存为新字段 ["total_wins", "total_pop"]
+        },
+        {"type": "formula", "as": "win_share", "expr": "datum.wins / datum.total_wins"},  // › 类型
+        {"type": "formula", "as": "pop_share", "expr": "datum.pop / datum.total_pop"},  // › 类型
+        {"type": "formula", "as": "index", "expr": "datum.win_share / datum.pop_share"},  // › 类型
+        {"type": "formula", "as": "r", "expr": "8.5 * sqrt(datum.wins)"},  // › 类型
+        {
+          "type": "geopoint",  // › 把经纬度投影成屏幕坐标
+          "projection": "australia",  // › 地图投影：经纬度 → 平面坐标
+          "fields": ["lon", "lat"],  // › 要运算的字段列表
+          "as": ["cx", "cy"]  // › 计算结果存为新字段 ["cx", "cy"]
+        }
+      ]
+    },
+    {
+      "name": "size_legend",  // › 命名为 "size_legend"，别处用这个名字引用
+      "values": [{"w": 1}, {"w": 10}, {"w": 30}],  // › 手动指定显示哪些值（刻度/图例项），或内嵌数据行
+      "transform": [{"type": "formula", "as": "r", "expr": "8.5 * sqrt(datum.w)"}]  // › 数据变换管道：按顺序一步一步加工数据，上一步的输出是下一步的输入
+    }
+  ],
+  "projections": [  // › 定义投影（Vega 里单独声明，供多个 mark 共用）
+    {
+      "name": "australia",  // › 命名为 "australia"，别处用这个名字引用
+      "type": "conicEqualArea",  // › 等面积圆锥投影，澳大利亚常用，面积不失真
+      "parallels": [-18, -36],  // › 圆锥投影的两条标准纬线，决定变形最小的位置
+      "rotate": [-132, 0],  // › 旋转地球，把澳大利亚转到画面正中
+      "size": {"signal": "[width, height - 85]"},  // › 大小
+      "fit": {"signal": "data('outline')"}  // › 让投影自动缩放，刚好装下这块地图
+    }
+  ],
+  "scales": [  // › Vega 的比例尺列表
+    {
+      "name": "colour",  // › 命名为 "colour"，别处用这个名字引用
+      "type": "linear",  // › 线性比例尺
+      "domain": [0.4, 1, 1.8],  // › 数据的取值范围（输入）
+      "range": ["#2f6c8f", "#e6dfd2", "#a36a12"],  // › 映射到的输出范围（像素、颜色列表 …）
+      "interpolate": "hcl",  // › 连线/颜色的插值方式（monotone 平滑；hcl 感知均匀的颜色混合）
+      "clamp": true  // › 超出范围的值夹到边界颜色，不外推
+    }
+  ],
+  "legends": [  // › Vega 的图例列表
+    {
+      "fill": "colour",  // › 填充色
+      "type": "gradient",  // › 类型
+      "orient": "bottom-right",  // › 放在图的哪一边（top/bottom/left/right）
+      "direction": "horizontal",  // › 图例排列方向（horizontal/vertical）
+      "gradientLength": 170,  // › 渐变图例条的长度（像素）
+      "title": "Share of wins ÷ share of people",  // › 标题文字；null 表示不要标题
+      "values": [0.4, 1, 1.8],  // › 手动指定显示哪些值（刻度/图例项），或内嵌数据行
+      "encode": {  // › Vega 的 mark 样式：enter（创建时）、update（更新时）、hover（悬停时）
+        "labels": {
+          "update": {  // › 每次更新都会重新计算的属性
+            "text": {  // › 要显示的文字（来自字段或固定值）
+              "signal": "datum.value === 1 ? '1 = fair share' : datum.value < 1 ? 'fewer' : 'more'"  // › 图例标签：1 显示 1 = fair share，<1 显示 fewer，>1 显示 more
+            }
+          }
+        }
+      }
+    }
+  ],
+  "marks": [  // › Vega 里的图形列表（按顺序从下到上画）
+    {
+      "type": "shape",  // › 画形状（Vega：地图）
+      "from": {"data": "outline"},  // › 这个 mark/数据 的数据来源
+      "encode": {  // › Vega 的 mark 样式：enter（创建时）、update（更新时）、hover（悬停时）
+        "enter": {  // › 元素创建时设置的属性（只算一次）
+          "fill": {"value": "#f1ece3"},  // › 填充色
+          "stroke": {"value": "#fbf8f3"},  // › 边线颜色
+          "strokeWidth": {"value": 1}  // › 边线粗细（像素）
+        }
+      },
+      "transform": [{"type": "geoshape", "projection": "australia"}]  // › 数据变换管道：按顺序一步一步加工数据，上一步的输出是下一步的输入
+    },
+    {
+      "name": "bubbles",  // › 命名为 "bubbles"，别处用这个名字引用
+      "type": "symbol",  // › 画符号（Vega：点/圆）
+      "from": {"data": "nodes"},  // › 这个 mark/数据 的数据来源
+      "encode": {  // › Vega 的 mark 样式：enter（创建时）、update（更新时）、hover（悬停时）
+        "enter": {  // › 元素创建时设置的属性（只算一次）
+          "shape": {"value": "circle"},  // › 点的形状
+          "stroke": {"value": "#fbf8f3"},  // › 边线颜色
+          "strokeWidth": {"value": 1.5},  // › 边线粗细（像素）
+          "size": {"signal": "PI * datum.r * datum.r"},  // › 大小
+          "fill": {"scale": "colour", "field": "index"},  // › 填充色
+          "tooltip": {  // › 鼠标悬停时显示的信息
+            "signal": "{'title': datum.state_name, 'ARIA wins': datum.wins, 'Share of wins': format(datum.win_share, '.0%'), 'Share of population': format(datum.pop_share, '.0%'), 'Ratio': format(datum.index, '.2f')}"  // › 悬停提示：州名、获奖数、获奖占比、人口占比、两者比值
+          }
+        }
+      },
+      "transform": [  // › 数据变换管道：按顺序一步一步加工数据，上一步的输出是下一步的输入
+        {
+          "type": "force",  // › 力导向布局
+          "static": true,  // › true = 一次算完，不做动画
+          "iterations": 400,  // › 模拟迭代次数，越多越稳定
+          "forces": [  // › 力的列表，一起作用
+            {"force": "collide", "radius": {"expr": "datum.datum.r + 2"}, "iterations": 3},  // › 力导向模拟：碰撞、拉向目标位置，用来避免圆圈重叠
+            {"force": "x", "x": "datum.cx", "strength": 0.25},  // › 力导向模拟：碰撞、拉向目标位置，用来避免圆圈重叠
+            {"force": "y", "y": "datum.cy", "strength": 0.25}  // › 力导向模拟：碰撞、拉向目标位置，用来避免圆圈重叠
+          ]
+        }
+      ]
+    },
+    {
+      "type": "text",  // › 画文字
+      "from": {"data": "bubbles"},  // › 这个 mark/数据 的数据来源
+      "encode": {  // › Vega 的 mark 样式：enter（创建时）、update（更新时）、hover（悬停时）
+        "enter": {  // › 元素创建时设置的属性（只算一次）
+          "align": {"value": "center"},  // › 文字水平对齐
+          "baseline": {"value": "middle"},  // › 文字垂直对齐
+          "fontWeight": {"value": 600},  // › 字重（400 常规，700 粗体）
+          "fontSize": {"signal": "datum.datum.wins >= 10 ? 12 : 9"},  // › 字号
+          "fill": {  // › 填充色
+            "signal": "datum.datum.index > 1.35 || datum.datum.index < 0.55 ? '#fffaf0' : '#2b2520'"  // › 圆颜色很深时文字用白色，颜色浅时用深色（保证可读）
+          },
+          "text": {  // › 要显示的文字（来自字段或固定值）
+            "signal": "datum.datum.wins >= 10 ? [datum.datum.state, datum.datum.wins + ' wins'] : datum.datum.wins >= 5 ? datum.datum.state : ''"  // › ≥10：两行（州名+数量）；5–9：只州名；<5：不写
+          },
+          "lineHeight": {"value": 13}  // › 多行文字的行距
+        },
+        "update": {"x": {"field": "x"}, "y": {"field": "y"}}  // › 每次更新都会重新计算的属性
+      }
+    },
+    {
+      "type": "text",  // › 画文字
+      "from": {"data": "bubbles"},  // › 这个 mark/数据 的数据来源
+      "encode": {  // › Vega 的 mark 样式：enter（创建时）、update（更新时）、hover（悬停时）
+        "enter": {  // › 元素创建时设置的属性（只算一次）
+          "align": {"value": "left"},  // › 文字水平对齐
+          "baseline": {"value": "middle"},  // › 文字垂直对齐
+          "fontSize": {"value": 10},  // › 字号
+          "fill": {"value": "#5f574d"},  // › 填充色
+          "text": {  // › 要显示的文字（来自字段或固定值）
+            "signal": "datum.datum.wins < 5 ? datum.datum.state + ' ' + datum.datum.wins : datum.datum.wins < 10 ? datum.datum.wins : ''"  // › 小圆在旁边写 州名+数量；中圆只写数量；大圆不写（里面已经有字）
+          }
+        },
+        "update": {"x": {"signal": "datum.x + datum.datum.r + 3"}, "y": {"field": "y"}}  // › 每次更新都会重新计算的属性
+      }
+    },
+    {
+      "type": "group",  // › Vega：一组嵌套的图形
+      "encode": {"enter": {"x": {"value": 0}, "y": {"signal": "height - 62"}}},  // › Vega 的 mark 样式：enter（创建时）、update（更新时）、hover（悬停时）
+      "marks": [  // › Vega 里的图形列表（按顺序从下到上画）
+        {
+          "type": "text",  // › 画文字
+          "encode": {  // › Vega 的 mark 样式：enter（创建时）、update（更新时）、hover（悬停时）
+            "enter": {  // › 元素创建时设置的属性（只算一次）
+              "x": {"value": 0},  // › x 方向的位置
+              "y": {"value": -58},  // › y 方向的位置
+              "text": {"value": "Circle area = number of wins"},  // › 要显示的文字（来自字段或固定值）
+              "fontSize": {"value": 11},  // › 字号
+              "fontWeight": {"value": 600},  // › 字重（400 常规，700 粗体）
+              "fill": {"value": "#3e3832"}  // › 填充色
+            }
+          }
+        },
+        {
+          "type": "symbol",  // › 画符号（Vega：点/圆）
+          "from": {"data": "size_legend"},  // › 这个 mark/数据 的数据来源
+          "encode": {  // › Vega 的 mark 样式：enter（创建时）、update（更新时）、hover（悬停时）
+            "enter": {  // › 元素创建时设置的属性（只算一次）
+              "x": {"signal": "datum.w === 1 ? 12 : datum.w === 10 ? 48 : 112"},  // › x 方向的位置
+              "y": {"signal": "56 - datum.r"},  // › y 方向的位置
+              "size": {"signal": "PI * datum.r * datum.r"},  // › 大小
+              "fill": {"value": "transparent"},  // › 填充色
+              "stroke": {"value": "#9b9083"}  // › 边线颜色
+            }
+          }
+        },
+        {
+          "type": "text",  // › 画文字
+          "from": {"data": "size_legend"},  // › 这个 mark/数据 的数据来源
+          "encode": {  // › Vega 的 mark 样式：enter（创建时）、update（更新时）、hover（悬停时）
+            "enter": {  // › 元素创建时设置的属性（只算一次）
+              "x": {"signal": "datum.w === 1 ? 12 : datum.w === 10 ? 48 : 112"},  // › x 方向的位置
+              "y": {"signal": "53 - 2 * datum.r"},  // › y 方向的位置
+              "align": {"value": "center"},  // › 文字水平对齐
+              "fontSize": {"value": 9.5},  // › 字号
+              "fill": {"value": "#5f574d"},  // › 填充色
+              "text": {"signal": "datum.w"}  // › 要显示的文字（来自字段或固定值）
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
